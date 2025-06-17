@@ -1,5 +1,5 @@
 import { Layout } from "antd";
-import { Content, Header } from "antd/es/layout/layout";
+import { Content } from "antd/es/layout/layout";
 import { Outlet, useNavigate } from "react-router";
 import SiderComponent from "../components/SiderComponent";
 import HeaderComponent from "../components/HeaderComponent";
@@ -32,11 +32,11 @@ const MainLayout = () => {
     }
   }, [auth]);
   return (
-    <Layout className="h-screen w-full relative">
+    <Layout className="min-h-screen w-full relative h-full">
       <Sider>
         <SiderComponent />
       </Sider>
-      <Layout>
+      <Layout className="h-full">
         <HeaderComponent />
         <Content className="p-3">
           <Outlet />

@@ -17,6 +17,7 @@ function App() {
               itemSelectedColor: appColor.primary500,
               itemColor: appColor.gray600,
             },
+
             Button: {
               defaultHoverBorderColor: appColor.primary400,
               defaultHoverColor: appColor.primary400,

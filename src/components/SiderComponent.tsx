@@ -29,6 +29,7 @@ const items: MenuProps["items"] = [
       </Link>
     ),
     icon: <MdOutlineInventory2 size={20} />,
+
     children: [
       {
         key: "/inventories/add-new-product",
@@ -39,9 +40,11 @@ const items: MenuProps["items"] = [
             </Link>
           </>
         ),
+        type: "item",
       },
     ],
   },
+
   {
     key: "/categories",
     label: (
@@ -114,6 +117,7 @@ const SiderComponent = () => {
         items={items}
         mode="inline"
         defaultSelectedKeys={[location.pathname]}
+        defaultOpenKeys={["/inventories"]}
       />
     </Sider>
   );

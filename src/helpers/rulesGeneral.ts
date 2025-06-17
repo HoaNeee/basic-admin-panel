@@ -1,6 +1,6 @@
 export const rules = [
   {
     required: true,
-    message: "This field is required",
+    message: "This field is required!",
   },
 ];
