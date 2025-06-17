@@ -1,0 +1,12 @@
+* {
+  font-family: "Inter", sans-serif;
+}
+
+.text-primary {
+  color: #f15e2b;
+}
+
+.btn .btn-primary {
+  background-color: #f15e2b;
+  color: white;
+}
