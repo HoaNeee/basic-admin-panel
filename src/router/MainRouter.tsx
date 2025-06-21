@@ -8,6 +8,9 @@ import Orders from "../pages/Orders";
 import ManageStore from "../pages/ManageStore";
 import AddProduct from "../pages/AddProduct";
 import Category from "../pages/Category";
+import Variations from "../pages/Variations";
+import VariationOptions from "../pages/VariationOptions";
+import UpdateProduct from "../pages/UpdateProduct";
 
 // const mainRouter = createBrowserRouter([
 //   {
@@ -31,6 +34,11 @@ const MainRouter = () => {
           <Route path="inventories">
             <Route index element={<Inventory />} />
             <Route path="add-new-product" element={<AddProduct />} />
+            <Route path="edit-product/:id" element={<UpdateProduct />} />
+            <Route path="variations">
+              <Route element={<Variations />} index />
+              <Route element={<VariationOptions />} path="options" />
+            </Route>
           </Route>
           <Route element={<Category />} path="categories" />
           <Route element={<Reports />} path="reports" />

@@ -28,8 +28,10 @@ import type { SelectModel } from "../models/formModel";
 import type { VariationModel } from "../models/variationModel";
 import { TiDelete } from "react-icons/ti";
 import { BiSolidPlusSquare } from "react-icons/bi";
+import { useParams } from "react-router";
+import type { ProductModel } from "../models/productModel";
 
-const AddProduct = () => {
+const UpdateProduct = () => {
   const [suppliers, setSuppliers] = useState<SelectModel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [openModalAddCategory, setOpenModalAddCategory] = useState(false);
@@ -39,7 +41,6 @@ const AddProduct = () => {
   const [dataSelectVariation, setDataSelectVariation] = useState<SelectModel[]>(
     []
   );
-
   const [listVariationChoosed, setListVariationChoosed] = useState<any[]>([]);
   /*listVariation -> select -> 
     {
@@ -62,15 +63,25 @@ const AddProduct = () => {
     any[]
   >([]);
 
+  /*
+    [
+      {
+        label: string,
+        value: string,
+      }
+    ]
+  */
+
   const [subProducts, setSubProducts] = useState<any[]>([]);
   /*
     {
       key_combi: string,
       price: string,
       stock: string,
-      sub_idL: string
+      sub_product_id: string
     }
   */
+  const [productDetail, setProductDetail] = useState<ProductModel>();
 
   const [mesApi, contextHolderMes] = message.useMessage();
   const [form] = Form.useForm();
@@ -78,14 +89,21 @@ const AddProduct = () => {
 
   const { token } = theme.useToken();
 
+  const params = useParams();
+
+  const product_id = params.id;
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-
         await getSupplier();
         await getCategories();
+
         await getVariations();
+        if (product_id) {
+          await getProductDetail(product_id);
+        }
       } catch (error: any) {
         console.log(error);
         mesApi.error(error.message);
@@ -199,18 +217,7 @@ const AddProduct = () => {
     try {
       setIsLoading(true);
       const response = await handleAPI(api);
-      setListVariationChoosed([
-        ...listVariationChoosed,
-        {
-          key: variation_id,
-          select: response.data.map((item: any) => {
-            return {
-              label: item.title,
-              value: item._id,
-            };
-          }),
-        },
-      ]);
+      return response.data;
     } catch (error: any) {
       mesApi.error(error.message);
     } finally {
@@ -227,18 +234,141 @@ const AddProduct = () => {
     setOpenModalAddCategory(false);
   };
 
+  const getProductDetail = async (product_id: string) => {
+    const api = `/products/detail/${product_id}`;
+
+    const response: any = await handleAPI(api);
+
+    if (response.dataSubProduct && response.dataSubProduct.length > 0) {
+      const data = [...response.dataSubProduct];
+
+      setSampleSubProductVariation(data.map((item: any) => item.options));
+
+      const items = data.map((item) => {
+        return {
+          key_combi: item.options.map((it: any) => it.value).join("-"),
+          price: item.price,
+          stock: item.stock,
+          sub_product_id: item._id,
+        };
+      });
+
+      setSubProducts(items);
+    }
+
+    const dataVariationIds = response.dataVariationIds;
+
+    setProductDetail({
+      ...response.data,
+      variation_ids: dataVariationIds,
+    });
+
+    form.setFieldsValue(response.data);
+    setProductType(response.data.productType);
+
+    const items = [];
+    for (const item of dataVariationIds) {
+      const data = await getVariationOptions(item);
+      items.push({
+        key: item,
+        select: data.map((item: any) => {
+          return {
+            label: item.title,
+            value: item._id,
+          };
+        }),
+      });
+    }
+    setListVariationChoosed(items);
+
+    setListVariationOptionChoosed(
+      response.dataVariationOptions.map((item: any) => {
+        return {
+          ...item,
+          key_variation: item._id,
+        };
+      })
+    );
+  };
+
+  const handleSaveSubProduct = async () => {
+    if (
+      listVariationChoosed.length !== listVariationOptionChoosed.length ||
+      listVariationOptionChoosed.some((it) => it.options.length === 0)
+    ) {
+      mesApi.error(
+        "Please choose at least one option or delete variation empty!"
+      );
+      return;
+    }
+    const data: any = {
+      subProducts: subProducts.map((item) => {
+        return {
+          old_options: item.key_combi.split("-"),
+          price: Number(item.price),
+          stock: Number(item.stock),
+          sub_product_id: item.sub_product_id,
+        };
+      }),
+    };
+
+    const arr = [...listVariationOptionChoosed];
+
+    const combinations: any = [];
+
+    const Try = (arr: any[] = [], idx: number, option: any) => {
+      for (let i = idx; i < arr.length; i++) {
+        const options = [...arr[i].options];
+        const ans = [...option];
+        for (let j = 0; j < options.length; j++) {
+          const item = { ...options[j] };
+          ans.push(item);
+          /*
+              option -> 
+              {
+                label: string,
+                value: string
+              }
+            */
+          if (idx === arr.length - 1 && ans.length === arr.length) {
+            combinations.push([...ans]);
+          }
+          Try(arr, i + 1, ans);
+          ans.pop();
+        }
+      }
+    };
+
+    Try(arr, 0, []);
+
+    data.combinations = [...combinations];
+    data.lengthChoosed = listVariationOptionChoosed.length;
+
+    console.log(data);
+
+    try {
+      const api = `/products/edit-sub-product/${product_id}`;
+      await handleAPI(api, data, "patch");
+      if (product_id) {
+        await getProductDetail(product_id);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <>
       {contextHolderMes}
       <div className="h-full w-full relative pb-10">
-        {isLoading && (
+        {(isLoading || !productDetail) && (
           <>
             <Loading type="screen" />
           </>
         )}
-        <h3 className="mb-3 text-2xl font-semibold">Add Product</h3>
+        <h3 className="mb-3 text-2xl font-semibold">Edit Product</h3>
         <Form
-          name="Add-product"
+          name="Edit-product"
           onFinish={handleFinish}
           form={form}
           layout="vertical"
@@ -292,7 +422,11 @@ const AddProduct = () => {
                 onInit={(_evt: any, editor: any) =>
                   (editorRef.current = editor)
                 }
-                initialValue={"<p>This is the initial content.</p>"}
+                initialValue={
+                  productDetail
+                    ? productDetail.content
+                    : "<p>This is the initial content.</p>"
+                }
                 init={{
                   height: 350,
                   menubar: true,
@@ -335,7 +469,7 @@ const AddProduct = () => {
                     type="primary"
                     onClick={() => form.submit()}
                   >
-                    Add new
+                    Save Product
                   </Button>
                 </Space>
               </Card>
@@ -419,7 +553,21 @@ const AddProduct = () => {
                           if (set.has(value)) {
                             mesApi.error("Already existing option!");
                           } else {
-                            await getVariationOptions(value);
+                            const data = await getVariationOptions(value);
+                            const item = {
+                              key: value,
+                              select: data.map((it: any) => {
+                                return {
+                                  label: it.title,
+                                  value: it._id,
+                                };
+                              }),
+                            };
+
+                            setListVariationChoosed([
+                              ...listVariationChoosed,
+                              item,
+                            ]);
                           }
                         }}
                       />
@@ -427,165 +575,108 @@ const AddProduct = () => {
                   </div>
                 }
               >
-                <div className="flex flex-col gap-2">
-                  {listVariationChoosed.map((item) => (
-                    <div key={item.key} className="flex gap-4 items-center">
-                      <div className="rounded border py-1 px-2 border-[#ddd] w-2/12 text-center">
-                        {findItem(variations, item.key).title || ""}
-                      </div>
-                      <div className="flex-1 flex gap-2 items-center">
-                        <Form.Item
-                          style={{
-                            width: "80%",
-                            margin: 0,
-                            padding: 0,
-                          }}
-                        >
-                          <Select
-                            optionFilterProp="label"
-                            options={
-                              listVariationChoosed.find(
-                                (it) => it.key === item.key
-                              ).select || []
-                            }
-                            placeholder="Choose options"
-                            size="middle"
+                {
+                  <div className="flex flex-col gap-2">
+                    {listVariationChoosed.map((item) => (
+                      <div key={item.key} className="flex gap-4 items-center">
+                        <div className="rounded border py-1 px-2 border-[#ddd] w-2/12 text-center">
+                          {findItem(variations, item.key).title || ""}
+                        </div>
+                        <div className="flex-1 flex gap-2 items-center">
+                          <Form.Item
                             style={{
-                              width: "100%",
+                              width: "80%",
+                              margin: 0,
+                              padding: 0,
                             }}
-                            mode="tags"
-                            onChange={(_val, option) => {
-                              const items = [...listVariationOptionChoosed];
-                              const index = items.findIndex(
-                                (it) => it.key_variation === item.key
-                              );
-
-                              if (index !== -1) {
-                                if (option?.length > 0) {
-                                  items[index].options = option;
-                                } else {
-                                  items.splice(index, 1);
-                                }
-                              } else {
-                                items.push({
-                                  key_variation: item.key,
-                                  title:
-                                    findItem(variations, item.key)?.title ||
-                                    item.key,
-                                  options: option,
-                                });
+                          >
+                            <Select
+                              optionFilterProp="label"
+                              options={
+                                listVariationChoosed.find(
+                                  (it) => it.key === item.key
+                                )?.select || []
                               }
-                              setListVariationOptionChoosed(items);
-                            }}
-                          />
-                        </Form.Item>
-                        <div className="flex gap-1.5 items-center">
-                          <TiDelete
-                            size={20}
-                            color="red"
-                            className="cursor-pointer"
-                            onClick={() => {
-                              setListVariationChoosed(
-                                listVariationChoosed.filter(
-                                  (it) => it.key !== item.key
-                                )
-                              );
-
-                              const index =
-                                listVariationOptionChoosed.findIndex(
+                              placeholder="Choose options"
+                              size="middle"
+                              style={{
+                                width: "100%",
+                              }}
+                              mode="tags"
+                              onChange={(_val, option) => {
+                                const items = [...listVariationOptionChoosed];
+                                const index = items.findIndex(
                                   (it) => it.key_variation === item.key
                                 );
-                              if (index !== -1) {
-                                listVariationOptionChoosed.splice(index, 1);
-                              }
-                              setListVariationOptionChoosed(
-                                listVariationOptionChoosed
-                              );
-                            }}
-                            title="Delete this field"
-                          />
 
-                          <BiSolidPlusSquare
-                            size={20}
-                            color={"blue"}
-                            className="cursor-pointer"
-                            title="Add new value"
-                          />
+                                if (index !== -1) {
+                                  if (option?.length > 0) {
+                                    items[index].options = option;
+                                  } else {
+                                    items.splice(index, 1);
+                                  }
+                                } else {
+                                  items.push({
+                                    key_variation: item.key,
+                                    title:
+                                      findItem(variations, item.key)?.title ||
+                                      item.key,
+                                    options: option,
+                                  });
+                                }
+                                setListVariationOptionChoosed(items);
+                              }}
+                              value={listVariationOptionChoosed
+                                .find((it) => it?.key_variation === item.key)
+                                ?.options.map((el: any) => el.value)}
+                            />
+                          </Form.Item>
+                          <div className="flex gap-1.5 items-center">
+                            <TiDelete
+                              size={20}
+                              color="red"
+                              className="cursor-pointer"
+                              onClick={() => {
+                                setListVariationChoosed(
+                                  listVariationChoosed.filter(
+                                    (it) => it.key !== item.key
+                                  )
+                                );
+
+                                const index =
+                                  listVariationOptionChoosed.findIndex(
+                                    (it) => it.key_variation === item.key
+                                  );
+                                if (index !== -1) {
+                                  listVariationOptionChoosed.splice(index, 1);
+                                }
+                                setListVariationOptionChoosed(
+                                  listVariationOptionChoosed
+                                );
+                              }}
+                              title="Delete this field"
+                            />
+
+                            <BiSolidPlusSquare
+                              size={20}
+                              color={"blue"}
+                              className="cursor-pointer"
+                              title="Add new value"
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                }
                 {listVariationChoosed && listVariationChoosed.length > 0 && (
                   <div className="text-right mt-4">
                     <Button
                       size="middle"
                       type="primary"
-                      onClick={() => {
-                        // console.log(form.getFieldsValue());
-                        const arr = [...listVariationOptionChoosed];
-
-                        const combinations: any = [];
-
-                        const Try = (
-                          arr: any[] = [],
-                          idx: number,
-                          option: any
-                        ) => {
-                          for (let i = idx; i < arr.length; i++) {
-                            const options = arr[i].options;
-                            const ouput = [...option];
-                            for (let j = 0; j < options.length; j++) {
-                              ouput.push(options[j]);
-                              /*
-                                option -> 
-                                {
-                                  label: string,
-                                  value: string
-                                }
-                              */
-                              if (
-                                idx === arr.length - 1 &&
-                                ouput.length === arr.length
-                              ) {
-                                combinations.push([...ouput]);
-                              }
-                              Try(arr, i + 1, ouput);
-                              ouput.pop();
-                            }
-                          }
-                        };
-
-                        if (
-                          listVariationChoosed.length !==
-                            listVariationOptionChoosed.length ||
-                          listVariationOptionChoosed.some(
-                            (it) => it.options.length === 0
-                          )
-                        ) {
-                          mesApi.error(
-                            "Please choose at least one option or delete variation empty!"
-                          );
-                        } else {
-                          Try(arr, 0, []);
-                          const items = [];
-                          for (const item of combinations) {
-                            const key = item
-                              .map((it: any) => it.value)
-                              .join("-");
-                            items.push({
-                              key_combi: key,
-                              price: "",
-                              stock: "",
-                            });
-                          }
-
-                          setSubProducts(items);
-                          setSampleSubProductVariation([...combinations]);
-                        }
-                      }}
+                      onClick={handleSaveSubProduct}
                     >
-                      Create
+                      Save Variation
                     </Button>
                   </div>
                 )}
@@ -601,12 +692,14 @@ const AddProduct = () => {
                             .map((it: any) => it.label)
                             .join(" - ");
 
-                          const key_combi = item
-                            .map((it: any) => it.value)
-                            .join("-");
+                          // const key_combi = item
+                          //   .map((it: any) => it.value)
+                          //   .join("-");
+
+                          const sub_product_id = item[0].sub_product_id;
 
                           const it = subProducts.find(
-                            (el) => el.key_combi === key_combi
+                            (el) => el.sub_product_id === sub_product_id
                           );
 
                           return {
@@ -627,7 +720,9 @@ const AddProduct = () => {
                                           const { name, value } = e.target;
                                           const items = [...subProducts];
                                           const idx = items.findIndex(
-                                            (el) => el.key_combi === key_combi
+                                            (el) =>
+                                              el.sub_product_id ===
+                                              sub_product_id
                                           );
                                           if (idx !== -1) {
                                             items[idx][name] = value;
@@ -640,6 +735,7 @@ const AddProduct = () => {
                                     <div className="w-full">
                                       <label>Stock: </label>
                                       <Input
+                                        value={it?.stock}
                                         placeholder="Enter Stock"
                                         name="stock"
                                         type="number"
@@ -648,7 +744,9 @@ const AddProduct = () => {
                                           const { name, value } = e.target;
                                           const items = [...subProducts];
                                           const idx = items.findIndex(
-                                            (el) => el.key_combi === key_combi
+                                            (el) =>
+                                              el.sub_product_id ===
+                                              sub_product_id
                                           );
                                           if (idx !== -1) {
                                             items[idx][name] = value;
@@ -676,9 +774,6 @@ const AddProduct = () => {
                           };
                         })}
                       />
-                      {/* {sampleDataVariation.map((item, idx) => (
-                    <p key={idx}>{item.map((it: any) => it.label + " ")}</p>
-                  ))} */}
                     </div>
                   )}
               </Card>
@@ -698,4 +793,4 @@ const AddProduct = () => {
   );
 };
 
-export default AddProduct;
+export default UpdateProduct;

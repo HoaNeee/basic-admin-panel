@@ -32,11 +32,16 @@ const MainLayout = () => {
     }
   }, [auth]);
   return (
-    <Layout className="min-h-screen w-full relative h-full">
+    <Layout
+      className="w-full relative"
+      style={{
+        minHeight: "100vh",
+      }}
+    >
       <Sider>
         <SiderComponent />
       </Sider>
-      <Layout className="h-full">
+      <Layout className="">
         <HeaderComponent />
         <Content className="p-3">
           <Outlet />

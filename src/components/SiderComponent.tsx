@@ -9,6 +9,7 @@ import { BsBoxSeam } from "react-icons/bs";
 import { LuClipboardList } from "react-icons/lu";
 import Logo from "../assets/logo.png";
 import { TiTags } from "react-icons/ti";
+import { appName } from "../constants/appName";
 
 const items: MenuProps["items"] = [
   {
@@ -22,21 +23,43 @@ const items: MenuProps["items"] = [
   },
 
   {
-    key: "/inventories",
+    key: "inventories",
     label: (
-      <Link to={"/inventories"} className={"font-medium"}>
-        Inventory
-      </Link>
+      <>
+        <p className="font-medium">Inventories</p>
+      </>
     ),
     icon: <MdOutlineInventory2 size={20} />,
 
     children: [
+      {
+        type: "divider",
+      },
+      {
+        key: "/inventories",
+        label: (
+          <Link to={"/inventories"} className={"font-medium"}>
+            Inventory
+          </Link>
+        ),
+      },
       {
         key: "/inventories/add-new-product",
         label: (
           <>
             <Link to={"inventories/add-new-product"} className="font-medium">
               Add product
+            </Link>
+          </>
+        ),
+        type: "item",
+      },
+      {
+        key: "/inventories/variations",
+        label: (
+          <>
+            <Link to={"inventories/variations"} className="font-medium">
+              Variations
             </Link>
           </>
         ),
@@ -111,7 +134,9 @@ const SiderComponent = () => {
         <div className="w-[52px] h-[52px]">
           <img src={Logo} alt="" />
         </div>
-        <p className="text-primary font-bold text-lg">SHOESHOP</p>
+        <p className="text-primary font-bold text-lg">
+          {appName.appConstantname}
+        </p>
       </div>
       <Menu
         items={items}

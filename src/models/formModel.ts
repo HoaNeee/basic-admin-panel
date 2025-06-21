@@ -30,9 +30,11 @@ export interface Rule {
 export interface SelectModel {
   label: string;
   value: string;
+  disabled?: boolean;
 }
 export interface TreeSelectModel {
   title: string;
   value: string;
   children?: any[];
+  disabled?: boolean;
 }

@@ -13,12 +13,11 @@ import type { TreeSelectModel } from "../models/formModel";
 
 const Category = () => {
   const [categories, setCategories] = useState<CategoryModel[]>([]);
-  const [categoriesTree, setCategoriesTree] = useState<TreeSelectModel[]>([]);
+  const [dataSelectTree, setDataSelectTree] = useState<TreeSelectModel[]>([]);
+  const [dataTableTree, setDataTableTree] = useState<any>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [mesApi, contextHolderMes] = message.useMessage();
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(4);
-  const [totalRecord, setTotalRecord] = useState(1);
   const [categorySelected, setCategorySelected] = useState<CategoryModel>();
 
   useEffect(() => {
@@ -26,17 +25,29 @@ const Category = () => {
   }, []);
 
   useEffect(() => {
-    getCategories();
-  }, [page, limit]);
+    const dataSelect = categories.map((item: CategoryModel) => {
+      return {
+        value: item._id,
+        parent_id: item.parent_id,
+        title: item.title,
+      };
+    });
 
-  const getData = async (api: string) => {
+    const dataTable = categories.map((item: CategoryModel) => {
+      return {
+        ...item,
+        key: item._id,
+      };
+    });
+    setDataTableTree(createTree(dataTable, "", "_id"));
+    setDataSelectTree(createTree(dataSelect, "", "value"));
+  }, [categories]);
+
+  const fetchAllCategories = async () => {
     try {
       setIsLoading(true);
-      const response: any = await handleAPI(api);
-      return {
-        data: response.data,
-        totalRecord: response.totalRecord,
-      };
+      const response = await handleAPI("/categories");
+      setCategories(response.data);
     } catch (error) {
       console.log(error);
     } finally {
@@ -44,58 +55,21 @@ const Category = () => {
     }
   };
 
-  const fetchAllCategories = async () => {
-    const data = await getData("/categories");
-    const dataTree = data?.data.map((item: any) => {
-      return {
-        value: item._id,
-        parent_id: item.parent_id,
-        title: item.title,
-      };
-    });
-    setCategoriesTree(createTree(dataTree));
-  };
-
-  const getCategories = async () => {
-    const api = `/categories?page=${page}&limit=${limit}`;
-    const data = await getData(api);
-    setCategories(data?.data);
-    setTotalRecord(data?.totalRecord);
-  };
-
   const handleDeleteItem = async (record: CategoryModel) => {
     const api = `/categories/delete/${record._id}`;
     try {
+      setIsDeleting(true);
       const response: any = await handleAPI(api, undefined, "delete");
       mesApi.success(response.message);
-      setCategories(categories.filter((item) => item._id !== record._id));
-      let arrTree = [...categoriesTree];
-
-      const findAndDel = (arr: any[], id: string, parent: any = {}) => {
-        for (let i = 0; i < arr.length; i++) {
-          if (arr[i].value === id) {
-            const index = parent.children.findIndex(
-              (item: any) => item.value === id
-            );
-            if (index !== -1) {
-              parent.children.splice(index, 1);
-            }
-          } else if (arr[i].children.length > 0) {
-            findAndDel(arr[i].children, id, arr[i]);
-          }
-        }
-      };
-
-      if (record.parent_id === "") {
-        arrTree = arrTree.filter((item) => item.value !== record._id);
-      } else {
-        findAndDel(arrTree, record._id);
+      if (categorySelected?._id === record._id) {
+        setCategorySelected(undefined);
       }
-
-      setCategoriesTree(arrTree);
+      setCategories(categories.filter((item) => item._id !== record._id));
     } catch (error: any) {
       console.log(error);
       mesApi.error(error.message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -142,106 +116,27 @@ const Category = () => {
     <>
       {contextHolderMes}
       <div className="flex w-full h-full gap-6 relative">
-        {isLoading && <Loading type="screen" />}
+        {(isLoading || isDeleting) && <Loading type="screen" />}
         <div className="w-2/5">
           <Card title="Add New Category">
             <AddCategory
-              categories={categoriesTree}
+              categories={dataSelectTree}
               onAddNew={(val) => {
                 if (!categorySelected) {
                   fetchAllCategories();
-                  if (categories.length === limit) {
-                    const arr = [...categories];
-                    arr.splice(arr.length - 1, 1);
-                    setCategories([val, ...arr]);
-                  }
                 } else {
                   const arr = [...categories];
-                  const idx = arr.findIndex((item) => item._id === val._id);
-                  if (idx !== -1) {
-                    arr[idx] = { ...val };
+                  const index = arr.findIndex(
+                    (item) => item._id === categorySelected._id
+                  );
+                  if (index !== -1) {
+                    arr[index] = { ...val };
                     setCategories(arr);
                   }
-
-                  const arrTree: any = [...categoriesTree];
-
-                  const dfsParent = (
-                    data: any[] = [],
-                    id: string,
-
-                    item: any,
-                    type = 1,
-                    idChild = ""
-                  ) => {
-                    for (let i = 0; i < data.length; i++) {
-                      if (data[i].value === id) {
-                        if (type === 1) {
-                          const index = data[i].children.findIndex(
-                            (i: any) => i.value === idChild
-                          );
-                          if (index !== -1) {
-                            data[i].children.splice(index, 1);
-                          }
-                        } else {
-                          data[i].children.push(item);
-                        }
-                        return;
-                      } else if (
-                        data[i].children &&
-                        data[i].children.length > 0
-                      ) {
-                        dfsParent(data[i].children, id, item, type, idChild);
-                      }
-                    }
-                  };
-
-                  const dfs = (data: any[] = [], id: any) => {
-                    for (let i = 0; i < data.length; i++) {
-                      if (data[i].value === id) {
-                        const item = {
-                          ...data[i],
-                        };
-
-                        item.title = val.title;
-                        item.parent_id = val.parent_id;
-                        if (data[i].parent_id !== val.parent_id) {
-                          if (!data[i].parent_id || data[i].parent_id === "") {
-                            arrTree.splice(i, 1);
-                          } else {
-                            dfsParent(
-                              arrTree,
-                              data[i].parent_id,
-                              data[i],
-                              1,
-                              data[i].value
-                            );
-                          }
-
-                          if (val.parent_id === "") {
-                            arrTree.push(item);
-                            return;
-                          }
-
-                          dfsParent(arrTree, val.parent_id, item, 2);
-                        } else {
-                          data[i].title = val.title;
-                        }
-
-                        return;
-                      }
-                      if (data[i].children && data[i].children.length > 0) {
-                        dfs(data[i].children, id);
-                      }
-                    }
-                  };
-
-                  dfs(arrTree, val._id);
-
-                  setCategoriesTree(arrTree);
                 }
               }}
               mesApi={mesApi}
-              documentSelect={categorySelected}
+              select={categorySelected}
               onCancel={() => {
                 setCategorySelected(undefined);
               }}
@@ -253,21 +148,8 @@ const Category = () => {
             <Table
               size="small"
               columns={columns}
-              dataSource={categories}
-              rowKey={"_id"}
-              pagination={{
-                total: totalRecord,
-                showSizeChanger: true,
-                onShowSizeChange(_, size) {
-                  setLimit(size);
-                },
+              dataSource={dataTableTree}
 
-                onChange(page, pageSize) {
-                  setPage(page);
-                  setLimit(pageSize);
-                },
-                pageSize: limit,
-              }}
               // scroll={{
               //   y: 480,
               //   x: "100%",

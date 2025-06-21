@@ -16,6 +16,8 @@ function App() {
               itemSelectedBg: appColor.primary200,
               itemSelectedColor: appColor.primary500,
               itemColor: appColor.gray600,
+              colorPrimaryTextActive: appColor.primary500,
+              colorPrimary: appColor.primary500,
             },
 
             Button: {

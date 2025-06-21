@@ -75,7 +75,7 @@ const Suppliers = () => {
   return (
     <>
       {contextHolderMess}
-      <div className="w-full h-full bg-white px-2 py-3 rounded-md">
+      <div className="w-full bg-white px-2 py-3 rounded-md">
         <Flex justify="space-between" align="center">
           <p className="text-lg font-medium">Suppliers</p>
           <Space size={5}>

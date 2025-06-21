@@ -14,13 +14,14 @@ interface Props {
   onAddNew?: (val: CategoryModel) => void;
   onFetch?: () => void;
   mesApi?: MessageInstance;
-  documentSelect?: CategoryModel;
+  select?: CategoryModel;
   onCancel?: () => void;
 }
 
 const AddCategory = (props: Props) => {
-  const { categories, onAddNew, mesApi, onFetch, documentSelect, onCancel } =
-    props;
+  const { categories, onAddNew, mesApi, onFetch, select, onCancel } = props;
+
+  //select is update
 
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<TreeSelectModel[]>([]);
@@ -28,15 +29,33 @@ const AddCategory = (props: Props) => {
 
   useEffect(() => {
     if (categories && categories.length > 0) {
-      setData(categories);
+      if (select) {
+        const arr = [...categories];
+        findSelfCat(arr, select._id);
+        setData(arr);
+      } else setData(categories);
     }
   }, [categories]);
 
   useEffect(() => {
-    if (documentSelect) {
-      form.setFieldsValue(documentSelect);
+    if (select) {
+      const arr = [...data];
+      findSelfCat(data, select._id);
+      setData(arr);
+      form.setFieldsValue(select);
     }
-  }, [documentSelect]);
+  }, [select]);
+
+  const findSelfCat = (data: any[] = [], id = "") => {
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].value === id) {
+        data[i].disabled = true;
+      } else {
+        data[i].disabled = false;
+        findSelfCat(data[i].children, id);
+      }
+    }
+  };
 
   const handleFinish = async (values: any) => {
     const data: any = {};
@@ -46,21 +65,19 @@ const AddCategory = (props: Props) => {
     }
     data.slug = replaceName(data.title || "");
 
-    const api = `/categories/${
-      documentSelect ? `edit/${documentSelect._id}` : "create"
-    }`;
+    const api = `/categories/${select ? `edit/${select._id}` : "create"}`;
     try {
       setIsLoading(true);
       const response: any = await handleAPI(
         api,
         data,
-        documentSelect ? "patch" : "post"
+        select ? "patch" : "post"
       );
       mesApi?.success(response?.message);
       if (onAddNew) {
-        if (documentSelect) {
+        if (select) {
           onAddNew({
-            ...documentSelect,
+            ...select,
             ...data,
           });
         } else {
@@ -90,8 +107,10 @@ const AddCategory = (props: Props) => {
           <TreeSelect
             treeData={data}
             showSearch
-            placeholder="This category is not parent"
+            placeholder="This category is haven't parent"
             allowClear
+            treeDefaultExpandAll
+            treeNodeFilterProp="title"
           />
         </Form.Item>
         <Form.Item name={"title"} label="Title" rules={rules}>
@@ -115,7 +134,7 @@ const AddCategory = (props: Props) => {
           onClick={() => form.submit()}
           loading={isLoading}
         >
-          {documentSelect ? "Update" : "Submit"}
+          {select ? "Update" : "Submit"}
         </Button>
       </Flex>
     </>

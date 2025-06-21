@@ -20,8 +20,20 @@ const ModalCategory = (props: Props) => {
   };
 
   return (
-    <Modal open={isOpen} onCancel={closeModal} title="Add New Category">
-      <AddCategory categories={categories} onFetch={onFetch} mesApi={mesApi} />
+    <Modal
+      open={isOpen}
+      onCancel={closeModal}
+      title="Add New Category"
+      footer={false}
+    >
+      <AddCategory
+        categories={categories}
+        onFetch={() => {
+          onFetch();
+          closeModal();
+        }}
+        mesApi={mesApi}
+      />
     </Modal>
   );
 };

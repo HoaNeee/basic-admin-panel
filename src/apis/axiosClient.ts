@@ -33,7 +33,7 @@ axiosClient.interceptors.response.use(
   async (response) => {
     if (!response.data || response.data.code > 300) {
       //token expired
-      if (response.data.code === 401) {
+      if (response.data.code === 402) {
         console.log("need refresh token");
         let refreshToken = "";
         const auth = localStorage.getItem(appName.auth);
