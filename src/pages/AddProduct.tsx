@@ -11,6 +11,9 @@ import {
   Space,
   theme,
   TreeSelect,
+  Upload,
+  type UploadFile,
+  type UploadProps,
 } from "antd";
 import Loading from "../components/Loading";
 import { Input } from "antd";
@@ -18,7 +21,7 @@ import TextArea from "antd/es/input/TextArea";
 import { Editor } from "@tinymce/tinymce-react";
 import { FaPlus } from "react-icons/fa6";
 import ModalCategory from "../components/modals/ModalCategory";
-import { handleAPI } from "../apis/request";
+import { handleAPI, uploadImage, uploadImageMulti } from "../apis/request";
 import { useEffect, useRef, useState } from "react";
 import { rules } from "../helpers/rulesGeneral";
 import { createTree } from "../helpers/createTree";
@@ -28,10 +31,15 @@ import type { SelectModel } from "../models/formModel";
 import type { VariationModel } from "../models/variationModel";
 import { TiDelete } from "react-icons/ti";
 import { BiSolidPlusSquare } from "react-icons/bi";
+import { useNavigate } from "react-router";
+import { genCombinations } from "../helpers/genCombinations";
+import UploadImage from "../components/UploadImage";
+import ModalVariationOption from "../components/modals/ModalVariationOption";
 
 const AddProduct = () => {
   const [suppliers, setSuppliers] = useState<SelectModel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [openModalAddCategory, setOpenModalAddCategory] = useState(false);
   const [categories, setCategories] = useState<CategoryModel[]>([]);
   const [productType, setProductType] = useState("simple");
@@ -72,10 +80,19 @@ const AddProduct = () => {
     }
   */
 
+  const [albumProduct, setAlbumProduct] = useState<UploadFile[]>([]);
+  const [thumbnail, setThumbnail] = useState<any>();
+  const [previewImage, setPreviewImage] = useState<any>();
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [openModalAddVariationOption, setOpenModalAddVariationOption] =
+    useState(false);
+  const [variationSelected, setVariationSelected] = useState<VariationModel>();
+
+  const navigate = useNavigate();
+
   const [mesApi, contextHolderMes] = message.useMessage();
   const [form] = Form.useForm();
   const editorRef = useRef<any>(null);
-
   const { token } = theme.useToken();
 
   useEffect(() => {
@@ -111,37 +128,64 @@ const AddProduct = () => {
 
   const handleFinish = async (values: any) => {
     const content = editorRef.current.getContent();
+    try {
+      setIsCreating(true);
+      const data: any = {};
+      for (const key in values) {
+        if (key === "categories") {
+          if (!values[key]) data[key] = [];
+          else data[key] = values[key];
+        } else {
+          data[key] = values[key] || "";
+        }
+      }
 
-    const data: any = {};
-    for (const key in values) {
-      data[key] = values[key] || "";
+      data.content = content;
+      data.productType = productType;
+      const items = [];
+
+      for (const item of subProducts) {
+        items.push({
+          options: item.key_combi.split("-"),
+          price: item?.price || "",
+          stock: item?.stock || "",
+          thumbnail: item?.thumbnail || "",
+        });
+      }
+
+      const api = `/products/create`;
+
+      const album = albumProduct.map((item) => item.originFileObj);
+      if (album && album.length > 0) {
+        const res = await uploadImageMulti("images", album);
+        data.images = res.data;
+      }
+      if (thumbnail) {
+        const res = await uploadImage("thumbnail", thumbnail);
+        data.thumbnail = res.data;
+      }
+
+      for (const item of items) {
+        if (item?.thumbnail) {
+          const res = await uploadImage("thumbnail", item.thumbnail);
+          item.thumbnail = res.data;
+        }
+      }
+
+      const payload = {
+        data: { ...data },
+        subProducts: [...items],
+      };
+
+      const response: any = await handleAPI(api, payload, "post");
+      navigate(`/inventories/edit-product/${response.data._id}`);
+      mesApi.success(response.message);
+    } catch (error: any) {
+      console.log(error);
+      mesApi.error(error.message);
+    } finally {
+      setIsCreating(false);
     }
-
-    data.content = content;
-    data.productType = productType;
-    const items = [];
-
-    for (const item of subProducts) {
-      items.push({
-        options: item.key_combi.split("-"),
-        price: item?.price || "",
-        stock: item?.stock || "",
-      });
-    }
-
-    const dataSend = {
-      data: { ...data },
-      subProducts: [...items],
-    };
-    console.log(dataSend);
-    // const api = `/products/create`;
-    // try {
-    //   const response = await handleAPI(api, dataSend, "post");
-    //   console.log(response);
-    // } catch (error: any) {
-    //   console.log(error);
-    //   mesApi.error(error.message);
-    // }
   };
 
   const getSupplier = async () => {
@@ -160,30 +204,23 @@ const AddProduct = () => {
   const getCategories = async () => {
     const api = `/categories`;
 
-    try {
-      setIsLoading(true);
-      const response = await handleAPI(api);
-      const data = response.data.map((item: any) => {
-        return {
-          value: item._id,
-          parent_id: item.parent_id,
-          title: item.title,
-        };
-      });
-      const arr = createTree(data, "", "value");
-      setCategories(arr);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
+    const response = await handleAPI(api);
+    const data = response.data.map((item: any) => {
+      return {
+        value: item._id,
+        parent_id: item.parent_id,
+        title: item.title,
+      };
+    });
+    const arr = createTree(data, "", "value");
+    setCategories(arr);
   };
 
   const getVariations = async () => {
     const api = `/variations`;
     const response = await handleAPI(api);
-    const data = [...response.data];
     setVariations(response.data);
+    const data = [...response.data];
     setDataSelectVariation(
       data.map((item) => {
         return {
@@ -199,18 +236,8 @@ const AddProduct = () => {
     try {
       setIsLoading(true);
       const response = await handleAPI(api);
-      setListVariationChoosed([
-        ...listVariationChoosed,
-        {
-          key: variation_id,
-          select: response.data.map((item: any) => {
-            return {
-              label: item.title,
-              value: item._id,
-            };
-          }),
-        },
-      ]);
+
+      return response.data;
     } catch (error: any) {
       mesApi.error(error.message);
     } finally {
@@ -223,15 +250,81 @@ const AddProduct = () => {
     return item;
   };
 
+  const handleCreateSubProduct = () => {
+    if (
+      listVariationChoosed.length !== listVariationOptionChoosed.length ||
+      listVariationOptionChoosed.some((it) => it.options.length === 0)
+    ) {
+      mesApi.error(
+        "Please choose at least one option or delete variation empty!"
+      );
+      return;
+    }
+    const arr = [...listVariationOptionChoosed];
+
+    const combinations = genCombinations(arr);
+
+    const items = [];
+    for (const item of combinations) {
+      const key = item.map((it: any) => it.value).join("-");
+      items.push({
+        key_combi: key,
+        price: "",
+        stock: "",
+        thumbnail: "",
+      });
+    }
+
+    setSubProducts(items);
+    setSampleSubProductVariation([...combinations]);
+  };
+
+  const handleChangeImage: UploadProps["onChange"] = ({
+    fileList: newFileList,
+  }) => {
+    setAlbumProduct(newFileList);
+  };
+
+  const handlePreviewImage = async (file: UploadFile) => {
+    if (!file.url && !file.preview) {
+      if (file.originFileObj) {
+        file.preview = URL.createObjectURL(file.originFileObj);
+      }
+    }
+    setPreviewImage(file.url || (file.preview as string));
+    setPreviewOpen(true);
+  };
+
+  const renderButtonUpload = () => {
+    return (
+      <div className="flex flex-col items-center text-gray-400">
+        <FaPlus size={20} />
+        <p>Upload</p>
+      </div>
+    );
+  };
+
+  const customRequest = (option: any) => {
+    if (option.onSuccess) {
+      option.onSuccess(option.file);
+    }
+    return option.file;
+  };
+
   const hideModalCategory = () => {
     setOpenModalAddCategory(false);
+  };
+
+  const hideModalVariationOption = () => {
+    setOpenModalAddVariationOption(false);
+    setVariationSelected(undefined);
   };
 
   return (
     <>
       {contextHolderMes}
       <div className="h-full w-full relative pb-10">
-        {isLoading && (
+        {(isLoading || isCreating) && (
           <>
             <Loading type="screen" />
           </>
@@ -268,17 +361,26 @@ const AddProduct = () => {
                   }}
                 />
               </Form.Item>
-              {productType === "simple" && (
-                <Form.Item label="Price" name={"price"} rules={rules}>
+              <div className="flex gap-2">
+                {productType === "simple" && (
+                  <Form.Item label="Price" name={"price"} className="w-full">
+                    <InputNumber
+                      type="number"
+                      placeholder="Enter price"
+                      style={{
+                        width: "100%",
+                      }}
+                    />
+                  </Form.Item>
+                )}
+                <Form.Item label="Stock" name={"stock"} className="w-full">
                   <InputNumber
                     type="number"
-                    placeholder="Enter price"
-                    style={{
-                      width: "100%",
-                    }}
+                    placeholder="Enter stock"
+                    style={{ width: "100%" }}
                   />
                 </Form.Item>
-              )}
+              </div>
 
               <Form.Item label="Short Description" name={"shortDescription"}>
                 <TextArea
@@ -329,7 +431,9 @@ const AddProduct = () => {
             <div className="flex-1 mt-4 flex flex-col gap-3">
               <Card size="small">
                 <Space>
-                  <Button size="middle">Cancel</Button>
+                  <Button size="middle" onClick={() => navigate(-1)}>
+                    Cancel
+                  </Button>
                   <Button
                     size="middle"
                     type="primary"
@@ -391,6 +495,34 @@ const AddProduct = () => {
                   />
                 </Form.Item>
               </Card>
+              <Card title="Thumbail" size="small">
+                <UploadImage
+                  file={thumbnail}
+                  onDelete={() => setThumbnail(undefined)}
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setThumbnail(e.target.files[0]);
+                    }
+                  }}
+                  local
+                />
+              </Card>
+
+              <Card title="Ablum" size="small">
+                <UploadImage
+                  fileList={albumProduct}
+                  multiple
+                  onAfterChangePreview={(visible) =>
+                    !visible && setPreviewImage("")
+                  }
+                  onChangePreview={(visible) => setPreviewOpen(visible)}
+                  previewOpen={previewOpen}
+                  previewFile={previewImage}
+                  onPreview={handlePreviewImage}
+                  onChange={handleChangeImage}
+                  title="Upload"
+                />
+              </Card>
             </div>
           </div>
           {productType === "variations" && (
@@ -419,7 +551,19 @@ const AddProduct = () => {
                           if (set.has(value)) {
                             mesApi.error("Already existing option!");
                           } else {
-                            await getVariationOptions(value);
+                            const data = await getVariationOptions(value);
+                            setListVariationChoosed([
+                              ...listVariationChoosed,
+                              {
+                                key: value,
+                                select: data.map((item: any) => {
+                                  return {
+                                    label: item.title,
+                                    value: item._id,
+                                  };
+                                }),
+                              },
+                            ]);
                           }
                         }}
                       />
@@ -431,7 +575,7 @@ const AddProduct = () => {
                   {listVariationChoosed.map((item) => (
                     <div key={item.key} className="flex gap-4 items-center">
                       <div className="rounded border py-1 px-2 border-[#ddd] w-2/12 text-center">
-                        {findItem(variations, item.key).title || ""}
+                        {findItem(variations, item.key)?.title || ""}
                       </div>
                       <div className="flex-1 flex gap-2 items-center">
                         <Form.Item
@@ -510,6 +654,13 @@ const AddProduct = () => {
                             color={"blue"}
                             className="cursor-pointer"
                             title="Add new value"
+                            onClick={() => {
+                              const variation = variations.find(
+                                (it) => it._id === item.key
+                              );
+                              setVariationSelected(variation);
+                              setOpenModalAddVariationOption(true);
+                            }}
                           />
                         </div>
                       </div>
@@ -521,69 +672,7 @@ const AddProduct = () => {
                     <Button
                       size="middle"
                       type="primary"
-                      onClick={() => {
-                        // console.log(form.getFieldsValue());
-                        const arr = [...listVariationOptionChoosed];
-
-                        const combinations: any = [];
-
-                        const Try = (
-                          arr: any[] = [],
-                          idx: number,
-                          option: any
-                        ) => {
-                          for (let i = idx; i < arr.length; i++) {
-                            const options = arr[i].options;
-                            const ouput = [...option];
-                            for (let j = 0; j < options.length; j++) {
-                              ouput.push(options[j]);
-                              /*
-                                option -> 
-                                {
-                                  label: string,
-                                  value: string
-                                }
-                              */
-                              if (
-                                idx === arr.length - 1 &&
-                                ouput.length === arr.length
-                              ) {
-                                combinations.push([...ouput]);
-                              }
-                              Try(arr, i + 1, ouput);
-                              ouput.pop();
-                            }
-                          }
-                        };
-
-                        if (
-                          listVariationChoosed.length !==
-                            listVariationOptionChoosed.length ||
-                          listVariationOptionChoosed.some(
-                            (it) => it.options.length === 0
-                          )
-                        ) {
-                          mesApi.error(
-                            "Please choose at least one option or delete variation empty!"
-                          );
-                        } else {
-                          Try(arr, 0, []);
-                          const items = [];
-                          for (const item of combinations) {
-                            const key = item
-                              .map((it: any) => it.value)
-                              .join("-");
-                            items.push({
-                              key_combi: key,
-                              price: "",
-                              stock: "",
-                            });
-                          }
-
-                          setSubProducts(items);
-                          setSampleSubProductVariation([...combinations]);
-                        }
-                      }}
+                      onClick={handleCreateSubProduct}
                     >
                       Create
                     </Button>
@@ -615,7 +704,29 @@ const AddProduct = () => {
                             children: (
                               <div>
                                 <Card style={{ borderRadius: 0 }}>
-                                  <div className="mb-2">image and SKU</div>
+                                  <div className="mb-2">
+                                    <Upload
+                                      maxCount={1}
+                                      listType="picture-card"
+                                      onChange={(props) => {
+                                        const { fileList } = props;
+
+                                        const items = [...subProducts];
+                                        const idx = items.findIndex(
+                                          (el) => el.key_combi === key_combi
+                                        );
+                                        if (idx !== -1) {
+                                          items[idx].thumbnail =
+                                            fileList[0]?.originFileObj || "";
+                                          setSubProducts(items);
+                                        }
+                                      }}
+                                      customRequest={customRequest}
+                                      onPreview={() => {}}
+                                    >
+                                      {renderButtonUpload()}
+                                    </Upload>
+                                  </div>
                                   <div className="flex gap-3 w-full">
                                     <div className="w-full">
                                       <label>Price: </label>
@@ -676,9 +787,6 @@ const AddProduct = () => {
                           };
                         })}
                       />
-                      {/* {sampleDataVariation.map((item, idx) => (
-                    <p key={idx}>{item.map((it: any) => it.label + " ")}</p>
-                  ))} */}
                     </div>
                   )}
               </Card>
@@ -693,6 +801,32 @@ const AddProduct = () => {
         mesApi={mesApi}
         categories={categories}
         onFetch={getCategories}
+      />
+
+      <ModalVariationOption
+        isOpen={openModalAddVariationOption}
+        onClose={hideModalVariationOption}
+        mesApi={mesApi}
+        onAddNew={async () => {
+          if (variationSelected) {
+            const data = await getVariationOptions(variationSelected?._id);
+            const items = [...listVariationChoosed];
+            const idx = items.findIndex(
+              (item) => item.key === variationSelected?._id
+            );
+
+            if (idx !== -1) {
+              items[idx].select = data.map((item: any) => {
+                return {
+                  label: item.title,
+                  value: item._id,
+                };
+              });
+              setListVariationChoosed(items);
+            }
+          }
+        }}
+        variation={variationSelected}
       />
     </>
   );

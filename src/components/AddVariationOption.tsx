@@ -15,24 +15,24 @@ import { useNavigate } from "react-router";
 interface Props {
   vaiation_id: string;
   onAddNew?: (val: VariationOptionModel) => void;
-  onFetch?: () => void;
   mesApi?: MessageInstance;
-  select?: VariationOptionModel;
+  select?: VariationOptionModel; //update
   onCancel?: () => void;
   p_api?: string;
   variation?: VariationModel;
+  isModal?: boolean;
 }
 
 const AddVariationOption = (props: Props) => {
   const {
     onAddNew,
     mesApi,
-    onFetch,
     select,
     onCancel,
     p_api,
     vaiation_id,
     variation,
+    isModal,
   } = props;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -73,6 +73,9 @@ const AddVariationOption = (props: Props) => {
       mesApi?.success(response.message);
       if (!select) {
         form.resetFields();
+      }
+      if (isModal && onCancel) {
+        onCancel();
       }
     } catch (error: any) {
       console.log(error);
@@ -117,7 +120,9 @@ const AddVariationOption = (props: Props) => {
             if (onCancel) {
               onCancel();
             }
-            navigate(-1);
+            if (!isModal) {
+              navigate(-1);
+            }
           }}
         >
           Cancel

@@ -18,9 +18,11 @@ axiosClient.interceptors.request.use(
     }
     config.headers.Authorization = `Bearer ${accessToken}`;
 
-    config.data = {
-      ...config.data,
-    };
+    if (!(config.data instanceof FormData)) {
+      config.data = {
+        ...config.data,
+      };
+    }
 
     return config;
   },

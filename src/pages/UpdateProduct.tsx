@@ -5,12 +5,16 @@ import {
   Collapse,
   Divider,
   Form,
+  Image,
   InputNumber,
   message,
   Select,
   Space,
   theme,
   TreeSelect,
+  Upload,
+  type UploadFile,
+  type UploadProps,
 } from "antd";
 import Loading from "../components/Loading";
 import { Input } from "antd";
@@ -18,7 +22,7 @@ import TextArea from "antd/es/input/TextArea";
 import { Editor } from "@tinymce/tinymce-react";
 import { FaPlus } from "react-icons/fa6";
 import ModalCategory from "../components/modals/ModalCategory";
-import { handleAPI } from "../apis/request";
+import { handleAPI, uploadImage, uploadImageMulti } from "../apis/request";
 import { useEffect, useRef, useState } from "react";
 import { rules } from "../helpers/rulesGeneral";
 import { createTree } from "../helpers/createTree";
@@ -28,12 +32,16 @@ import type { SelectModel } from "../models/formModel";
 import type { VariationModel } from "../models/variationModel";
 import { TiDelete } from "react-icons/ti";
 import { BiSolidPlusSquare } from "react-icons/bi";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import type { ProductModel } from "../models/productModel";
+import { genCombinations } from "../helpers/genCombinations";
+import { RiCloseFill } from "react-icons/ri";
+import ModalVariationOption from "../components/modals/ModalVariationOption";
 
 const UpdateProduct = () => {
   const [suppliers, setSuppliers] = useState<SelectModel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [openModalAddCategory, setOpenModalAddCategory] = useState(false);
   const [categories, setCategories] = useState<CategoryModel[]>([]);
   const [productType, setProductType] = useState("simple");
@@ -82,16 +90,23 @@ const UpdateProduct = () => {
     }
   */
   const [productDetail, setProductDetail] = useState<ProductModel>();
+  const [thumbnail, setThumbnail] = useState<any>();
+  const [albumProduct, setAlbumProduct] = useState<any[]>();
+  const [previewImage, setPreviewImage] = useState<any>();
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [oldThumbnail, setOldThumbnail] = useState<any>();
+  const [openModalAddVariationOption, setOpenModalAddVariationOption] =
+    useState(false);
+  const [variationSelected, setVariationSelected] = useState<VariationModel>();
 
   const [mesApi, contextHolderMes] = message.useMessage();
   const [form] = Form.useForm();
   const editorRef = useRef<any>(null);
-
   const { token } = theme.useToken();
-
   const params = useParams();
-
   const product_id = params.id;
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -137,29 +152,55 @@ const UpdateProduct = () => {
 
     data.content = content;
     data.productType = productType;
-    const items = [];
 
-    for (const item of subProducts) {
-      items.push({
-        options: item.key_combi.split("-"),
-        price: item?.price || "",
-        stock: item?.stock || "",
-      });
+    try {
+      setIsUpdating(true);
+      if (oldThumbnail) {
+        data.thumbnail = oldThumbnail;
+      } else {
+        if (thumbnail) {
+          const res = await uploadImage("thumbnail", thumbnail);
+          data.thumbnail = res.data;
+        } else {
+          data.thumbnail = "";
+        }
+      }
+
+      const images = [];
+      const needPushImage = [];
+
+      for (const item of albumProduct || []) {
+        if (item?.url) {
+          images.push(item.url);
+        } else {
+          needPushImage.push(item.originFileObj);
+        }
+      }
+
+      if (needPushImage.length > 0) {
+        const res = await uploadImageMulti("images", needPushImage);
+        for (const url of res.data) {
+          images.push(url);
+        }
+      }
+
+      data.images = images;
+
+      const api = `/products/edit/${product_id}`;
+
+      await handleSaveSubProduct("product");
+
+      const response: any = await handleAPI(api, data, "patch");
+      await getProductDetail(response.data.product_id);
+      mesApi.success(response.message);
+
+      console.log(data);
+    } catch (error: any) {
+      console.log(error);
+      mesApi.error(error.message);
+    } finally {
+      setIsUpdating(false);
     }
-
-    const dataSend = {
-      data: { ...data },
-      subProducts: [...items],
-    };
-    console.log(dataSend);
-    // const api = `/products/create`;
-    // try {
-    //   const response = await handleAPI(api, dataSend, "post");
-    //   console.log(response);
-    // } catch (error: any) {
-    //   console.log(error);
-    //   mesApi.error(error.message);
-    // }
   };
 
   const getSupplier = async () => {
@@ -178,23 +219,16 @@ const UpdateProduct = () => {
   const getCategories = async () => {
     const api = `/categories`;
 
-    try {
-      setIsLoading(true);
-      const response = await handleAPI(api);
-      const data = response.data.map((item: any) => {
-        return {
-          value: item._id,
-          parent_id: item.parent_id,
-          title: item.title,
-        };
-      });
-      const arr = createTree(data, "", "value");
-      setCategories(arr);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
+    const response = await handleAPI(api);
+    const data = response.data.map((item: any) => {
+      return {
+        value: item._id,
+        parent_id: item.parent_id,
+        title: item.title,
+      };
+    });
+    const arr = createTree(data, "", "value");
+    setCategories(arr);
   };
 
   const getVariations = async () => {
@@ -239,39 +273,33 @@ const UpdateProduct = () => {
 
     const response: any = await handleAPI(api);
 
-    if (response.dataSubProduct && response.dataSubProduct.length > 0) {
-      const data = [...response.dataSubProduct];
+    const dataSubProducts = [...response.dataSubProducts];
+    const dataVariationOptions = [...response.dataVariationOptions];
 
-      setSampleSubProductVariation(data.map((item: any) => item.options));
-
-      const items = data.map((item) => {
+    form.setFieldsValue(response.data);
+    setProductType(response.data.productType);
+    setOldThumbnail(response.data?.thumbnail || "");
+    const images = response.data?.images || [];
+    setAlbumProduct(
+      images.map((item: any) => {
         return {
-          key_combi: item.options.map((it: any) => it.value).join("-"),
-          price: item.price,
-          stock: item.stock,
-          sub_product_id: item._id,
+          url: item,
         };
-      });
+      })
+    );
 
-      setSubProducts(items);
-    }
-
-    const dataVariationIds = response.dataVariationIds;
-
+    const dataVariationIds = dataVariationOptions.map((item: any) => item._id);
     setProductDetail({
       ...response.data,
       variation_ids: dataVariationIds,
     });
 
-    form.setFieldsValue(response.data);
-    setProductType(response.data.productType);
-
     const items = [];
     for (const item of dataVariationIds) {
-      const data = await getVariationOptions(item);
+      const options = await getVariationOptions(item);
       items.push({
         key: item,
-        select: data.map((item: any) => {
+        select: options.map((item: any) => {
           return {
             label: item.title,
             value: item._id,
@@ -282,86 +310,141 @@ const UpdateProduct = () => {
     setListVariationChoosed(items);
 
     setListVariationOptionChoosed(
-      response.dataVariationOptions.map((item: any) => {
+      dataVariationOptions.map((item: any) => {
         return {
           ...item,
           key_variation: item._id,
         };
       })
     );
+    if (dataSubProducts && dataSubProducts.length > 0) {
+      const data = [...dataSubProducts];
+
+      setSampleSubProductVariation(data.map((item: any) => item.options));
+
+      const items = data.map((item) => {
+        return {
+          key_combi: item.options.map((it: any) => it.value).join("-"),
+          price: item?.price,
+          stock: item?.stock,
+          sub_product_id: item._id,
+          thumbnail: item?.thumbnail || "",
+        };
+      });
+
+      setSubProducts(items);
+    }
   };
 
-  const handleSaveSubProduct = async () => {
-    if (
-      listVariationChoosed.length !== listVariationOptionChoosed.length ||
-      listVariationOptionChoosed.some((it) => it.options.length === 0)
-    ) {
-      mesApi.error(
-        "Please choose at least one option or delete variation empty!"
-      );
-      return;
-    }
-    const data: any = {
-      subProducts: subProducts.map((item) => {
-        return {
-          old_options: item.key_combi.split("-"),
-          price: Number(item.price),
-          stock: Number(item.stock),
-          sub_product_id: item.sub_product_id,
-        };
-      }),
-    };
+  const handleSaveSubProduct = async (
+    action: "product" | "sub-product" = "sub-product"
+  ) => {
+    try {
+      if (
+        listVariationChoosed.length !== listVariationOptionChoosed.length ||
+        listVariationOptionChoosed.some((it) => it.options.length === 0)
+      ) {
+        const error =
+          "Please choose at least one option or delete variation empty!";
+        if (action === "product") {
+          throw Error(error);
+        } else {
+          mesApi.error(error);
+        }
+        return;
+      }
 
-    const arr = [...listVariationOptionChoosed];
+      setIsUpdating(true);
 
-    const combinations: any = [];
+      const items = [...subProducts];
 
-    const Try = (arr: any[] = [], idx: number, option: any) => {
-      for (let i = idx; i < arr.length; i++) {
-        const options = [...arr[i].options];
-        const ans = [...option];
-        for (let j = 0; j < options.length; j++) {
-          const item = { ...options[j] };
-          ans.push(item);
-          /*
-              option -> 
-              {
-                label: string,
-                value: string
-              }
-            */
-          if (idx === arr.length - 1 && ans.length === arr.length) {
-            combinations.push([...ans]);
-          }
-          Try(arr, i + 1, ans);
-          ans.pop();
+      for (const item of items) {
+        if (!item.thumbnail) {
+          item.thumbnail = "";
+        } else if (typeof item.thumbnail !== "string") {
+          const res = await uploadImage("thumbnail", item?.thumbnail);
+          item.thumbnail = res.data;
         }
       }
-    };
 
-    Try(arr, 0, []);
+      const data: any = {
+        subProducts: items.map((item) => {
+          return {
+            old_options: item.key_combi.split("-"),
+            price: Number(item.price),
+            stock: Number(item.stock),
+            sub_product_id: item.sub_product_id,
+            thumbnail: item?.thumbnail || "",
+          };
+        }),
+      };
 
-    data.combinations = [...combinations];
-    data.lengthChoosed = listVariationOptionChoosed.length;
+      const arr = [...listVariationOptionChoosed];
 
-    console.log(data);
+      const combinations: any = genCombinations(arr);
 
-    try {
+      data.combinations = [...combinations];
+
       const api = `/products/edit-sub-product/${product_id}`;
-      await handleAPI(api, data, "patch");
+      const response: any = await handleAPI(api, data, "patch");
+
+      if (action === "sub-product") {
+        mesApi.success(response.message);
+      }
+
       if (product_id) {
         await getProductDetail(product_id);
       }
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      if (action === "sub-product") {
+        mesApi.error(error.message);
+      } else throw Error(error.message);
+    } finally {
+      setIsUpdating(false);
     }
+  };
+
+  const handleChangeImage: UploadProps["onChange"] = ({
+    fileList: newFileList,
+  }) => {
+    setAlbumProduct(newFileList);
+  };
+
+  const handlePreviewImage = async (file: UploadFile) => {
+    if (!file.url && !file.preview) {
+      if (file.originFileObj) {
+        file.preview = URL.createObjectURL(file.originFileObj);
+      }
+    }
+    setPreviewImage(file.url || (file.preview as string));
+    setPreviewOpen(true);
+  };
+
+  const renderButtonUpload = () => {
+    return (
+      <div className="flex flex-col items-center text-gray-400">
+        <FaPlus size={20} />
+        <p>Upload</p>
+      </div>
+    );
+  };
+
+  const customRequest = (option: any) => {
+    if (option.onSuccess) {
+      option.onSuccess(option.file);
+    }
+    return option.file;
+  };
+  const hideModalVariationOption = () => {
+    setOpenModalAddVariationOption(false);
+    setVariationSelected(undefined);
   };
 
   return (
     <>
       {contextHolderMes}
       <div className="h-full w-full relative pb-10">
-        {(isLoading || !productDetail) && (
+        {(isUpdating || isLoading || !productDetail) && (
           <>
             <Loading type="screen" />
           </>
@@ -463,7 +546,9 @@ const UpdateProduct = () => {
             <div className="flex-1 mt-4 flex flex-col gap-3">
               <Card size="small">
                 <Space>
-                  <Button size="middle">Cancel</Button>
+                  <Button size="middle" onClick={() => navigate(-1)}>
+                    Cancel
+                  </Button>
                   <Button
                     size="middle"
                     type="primary"
@@ -524,6 +609,105 @@ const UpdateProduct = () => {
                     optionFilterProp="label"
                   />
                 </Form.Item>
+              </Card>
+              <Card title="Thumbail" size="small">
+                {thumbnail ? (
+                  <div className="text-center my-2">
+                    <div className="w-66 h-50 mx-auto relative">
+                      <Image
+                        src={URL.createObjectURL(thumbnail)}
+                        width={"100%"}
+                        height={"100%"}
+                        style={{
+                          objectFit: "cover",
+                        }}
+                        className="relative block"
+                      ></Image>
+                      <div
+                        className="absolute -top-2 -right-2 cursor-pointer z-10 bg-gray-500 rounded-full "
+                        onClick={() => {
+                          setThumbnail(undefined);
+                        }}
+                      >
+                        <RiCloseFill size={25} color="#fff" />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  oldThumbnail && (
+                    <div className="text-center my-2">
+                      <div className="w-66 h-50 mx-auto relative">
+                        <Image
+                          src={oldThumbnail}
+                          width={"100%"}
+                          height={"100%"}
+                          style={{
+                            objectFit: "cover",
+                          }}
+                          className="relative block"
+                        ></Image>
+                        <div
+                          className="absolute -top-2 -right-2 cursor-pointer z-10 bg-gray-500 rounded-full "
+                          onClick={() => {
+                            setOldThumbnail(undefined);
+                          }}
+                        >
+                          <RiCloseFill size={25} color="#fff" />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                )}
+                {!thumbnail && !oldThumbnail && (
+                  <div>
+                    <Button type="link" size="small">
+                      <label htmlFor="thumbnail">
+                        Choose thumbnail for product
+                      </label>
+                    </Button>
+
+                    <div className="hidden">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id="thumbnail"
+                        onChange={(e) => {
+                          if (e.target.files) {
+                            setThumbnail(e.target.files[0]);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </Card>
+              <Card title="Ablum" size="small">
+                <Upload
+                  listType="picture-card"
+                  fileList={albumProduct}
+                  action={() => {
+                    return Promise.resolve("");
+                  }}
+                  onChange={handleChangeImage}
+                  customRequest={customRequest}
+                  onPreview={handlePreviewImage}
+                  multiple
+                >
+                  {renderButtonUpload()}
+                </Upload>
+
+                {previewImage && (
+                  <Image
+                    wrapperStyle={{ display: "none" }}
+                    preview={{
+                      visible: previewOpen,
+                      onVisibleChange: (visible) => setPreviewOpen(visible),
+                      afterOpenChange: (visible) =>
+                        !visible && setPreviewImage(""),
+                    }}
+                    src={previewImage}
+                  />
+                )}
               </Card>
             </div>
           </div>
@@ -662,6 +846,13 @@ const UpdateProduct = () => {
                               color={"blue"}
                               className="cursor-pointer"
                               title="Add new value"
+                              onClick={() => {
+                                const variation = variations.find(
+                                  (it) => it._id === item.key
+                                );
+                                setVariationSelected(variation);
+                                setOpenModalAddVariationOption(true);
+                              }}
                             />
                           </div>
                         </div>
@@ -674,7 +865,7 @@ const UpdateProduct = () => {
                     <Button
                       size="middle"
                       type="primary"
-                      onClick={handleSaveSubProduct}
+                      onClick={() => handleSaveSubProduct("sub-product")}
                     >
                       Save Variation
                     </Button>
@@ -702,13 +893,48 @@ const UpdateProduct = () => {
                             (el) => el.sub_product_id === sub_product_id
                           );
 
+                          let file: any = {
+                            uid: "thumbnail_" + Date.now(),
+                            name: it?.thumbnail || "",
+                            url: it?.thumbnail || "",
+                          };
+
+                          if (!it?.thumbnail || !file.url) {
+                            file = undefined;
+                          }
+
                           return {
                             key: index,
                             label: <p className="font-medium">{label}</p>,
                             children: (
                               <div>
                                 <Card style={{ borderRadius: 0 }}>
-                                  <div className="mb-2">image and SKU</div>
+                                  <div className="mb-2">
+                                    <Upload
+                                      maxCount={1}
+                                      defaultFileList={
+                                        file ? [file] : undefined
+                                      }
+                                      listType="picture-card"
+                                      onChange={(props) => {
+                                        const { fileList } = props;
+                                        const items = [...subProducts];
+                                        const idx = items.findIndex(
+                                          (el) =>
+                                            el.sub_product_id === sub_product_id
+                                        );
+                                        if (idx !== -1) {
+                                          items[idx].thumbnail =
+                                            fileList[0]?.originFileObj || "";
+                                          setSubProducts(items);
+                                        }
+                                      }}
+                                      customRequest={customRequest}
+                                      onPreview={() => {}}
+                                    >
+                                      {renderButtonUpload()}
+                                    </Upload>
+                                  </div>
                                   <div className="flex gap-3 w-full">
                                     <div className="w-full">
                                       <label>Price: </label>
@@ -788,6 +1014,31 @@ const UpdateProduct = () => {
         mesApi={mesApi}
         categories={categories}
         onFetch={getCategories}
+      />
+      <ModalVariationOption
+        isOpen={openModalAddVariationOption}
+        onClose={hideModalVariationOption}
+        mesApi={mesApi}
+        onAddNew={async () => {
+          if (variationSelected) {
+            const data = await getVariationOptions(variationSelected?._id);
+            const items = [...listVariationChoosed];
+            const idx = items.findIndex(
+              (item) => item.key === variationSelected?._id
+            );
+
+            if (idx !== -1) {
+              items[idx].select = data.map((item: any) => {
+                return {
+                  label: item.title,
+                  value: item._id,
+                };
+              });
+              setListVariationChoosed(items);
+            }
+          }
+        }}
+        variation={variationSelected}
       />
     </>
   );

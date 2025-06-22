@@ -27,7 +27,6 @@ const Inventory = () => {
       setIsLoading(true);
       const response: any = await handleAPI(api);
       setProducts(response.data);
-      console.log(response.data);
     } catch (error) {
       console.log(error);
     } finally {
@@ -93,6 +92,9 @@ const Inventory = () => {
       key: "stock",
       dataIndex: "stock",
       title: "Stock",
+      render: (value) => {
+        return value ? value : "-";
+      },
     },
     {
       key: "productType",
