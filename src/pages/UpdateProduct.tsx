@@ -29,11 +29,15 @@ import { createTree } from "../helpers/createTree";
 import type { Supplier } from "../models/supplier";
 import type { CategoryModel } from "../models/categoryModel";
 import type { SelectModel } from "../models/formModel";
-import type { VariationModel } from "../models/variationModel";
+import type {
+  VariationChoosedModel,
+  VariationModel,
+  VariationOptionChoosedModel,
+} from "../models/variationModel";
 import { TiDelete } from "react-icons/ti";
 import { BiSolidPlusSquare } from "react-icons/bi";
 import { useNavigate, useParams } from "react-router";
-import type { ProductModel } from "../models/productModel";
+import type { ProductModel, SubProductModel } from "../models/productModel";
 import { genCombinations } from "../helpers/genCombinations";
 import { RiCloseFill } from "react-icons/ri";
 import ModalVariationOption from "../components/modals/ModalVariationOption";
@@ -49,28 +53,16 @@ const UpdateProduct = () => {
   const [dataSelectVariation, setDataSelectVariation] = useState<SelectModel[]>(
     []
   );
-  const [listVariationChoosed, setListVariationChoosed] = useState<any[]>([]);
-  /*listVariation -> select -> 
-    {
-      key: string,
-      select: []
-    }
-  */
-  const [listVariationOptionChoosed, setListVariationOptionChoosed] = useState<
-    any[]
+  const [listVariationChoosed, setListVariationChoosed] = useState<
+    VariationChoosedModel[]
   >([]);
-  /* listVariationOption ->
-      key_variation: string,
-      title: string,
-      options: {
-        label: string,
-        value: string
-      },
-  */
+  const [listVariationOptionChoosed, setListVariationOptionChoosed] = useState<
+    VariationOptionChoosedModel[]
+  >([]);
+
   const [sampleSubProductVariation, setSampleSubProductVariation] = useState<
     any[]
   >([]);
-
   /*
     [
       {
@@ -80,15 +72,7 @@ const UpdateProduct = () => {
     ]
   */
 
-  const [subProducts, setSubProducts] = useState<any[]>([]);
-  /*
-    {
-      key_combi: string,
-      price: string,
-      stock: string,
-      sub_product_id: string
-    }
-  */
+  const [subProducts, setSubProducts] = useState<SubProductModel[]>([]);
   const [productDetail, setProductDetail] = useState<ProductModel>();
   const [thumbnail, setThumbnail] = useState<any>();
   const [albumProduct, setAlbumProduct] = useState<any[]>();
@@ -114,7 +98,6 @@ const UpdateProduct = () => {
         setIsLoading(true);
         await getSupplier();
         await getCategories();
-
         await getVariations();
         if (product_id) {
           await getProductDetail(product_id);
@@ -193,8 +176,6 @@ const UpdateProduct = () => {
       const response: any = await handleAPI(api, data, "patch");
       await getProductDetail(response.data.product_id);
       mesApi.success(response.message);
-
-      console.log(data);
     } catch (error: any) {
       console.log(error);
       mesApi.error(error.message);
@@ -220,7 +201,7 @@ const UpdateProduct = () => {
     const api = `/categories`;
 
     const response = await handleAPI(api);
-    const data = response.data.map((item: any) => {
+    const data = response.data.map((item: CategoryModel) => {
       return {
         value: item._id,
         parent_id: item.parent_id,
@@ -317,23 +298,22 @@ const UpdateProduct = () => {
         };
       })
     );
-    if (dataSubProducts && dataSubProducts.length > 0) {
-      const data = [...dataSubProducts];
 
-      setSampleSubProductVariation(data.map((item: any) => item.options));
+    const data = [...dataSubProducts];
 
-      const items = data.map((item) => {
-        return {
-          key_combi: item.options.map((it: any) => it.value).join("-"),
-          price: item?.price,
-          stock: item?.stock,
-          sub_product_id: item._id,
-          thumbnail: item?.thumbnail || "",
-        };
-      });
+    setSampleSubProductVariation(data.map((item: any) => item.options));
 
-      setSubProducts(items);
-    }
+    const sampleSubs = data.map((item) => {
+      return {
+        key_combi: item?.options?.map((it: any) => it.value).join("-"),
+        price: item?.price,
+        stock: item?.stock,
+        sub_product_id: item._id,
+        thumbnail: item?.thumbnail || "",
+      };
+    });
+
+    setSubProducts(sampleSubs);
   };
 
   const handleSaveSubProduct = async (
@@ -342,7 +322,7 @@ const UpdateProduct = () => {
     try {
       if (
         listVariationChoosed.length !== listVariationOptionChoosed.length ||
-        listVariationOptionChoosed.some((it) => it.options.length === 0)
+        listVariationOptionChoosed.some((it) => it.options?.length === 0)
       ) {
         const error =
           "Please choose at least one option or delete variation empty!";
@@ -370,7 +350,7 @@ const UpdateProduct = () => {
       const data: any = {
         subProducts: items.map((item) => {
           return {
-            old_options: item.key_combi.split("-"),
+            old_options: item.key_combi?.split("-"),
             price: Number(item.price),
             stock: Number(item.stock),
             sub_product_id: item.sub_product_id,
@@ -482,15 +462,26 @@ const UpdateProduct = () => {
                 />
               </Form.Item>
               {productType === "simple" && (
-                <Form.Item label="Price" name={"price"} rules={rules}>
-                  <InputNumber
-                    type="number"
-                    placeholder="Enter price"
-                    style={{
-                      width: "100%",
-                    }}
-                  />
-                </Form.Item>
+                <div className="flex gap-2">
+                  {
+                    <Form.Item label="Price" name={"price"} className="w-full">
+                      <InputNumber
+                        type="number"
+                        placeholder="Enter price"
+                        style={{
+                          width: "100%",
+                        }}
+                      />
+                    </Form.Item>
+                  }
+                  <Form.Item label="Stock" name={"stock"} className="w-full">
+                    <InputNumber
+                      type="number"
+                      placeholder="Enter stock"
+                      style={{ width: "100%" }}
+                    />
+                  </Form.Item>
+                </div>
               )}
 
               <Form.Item label="Short Description" name={"shortDescription"}>
@@ -787,7 +778,7 @@ const UpdateProduct = () => {
                                 width: "100%",
                               }}
                               mode="tags"
-                              onChange={(_val, option) => {
+                              onChange={(_val, option: any) => {
                                 const items = [...listVariationOptionChoosed];
                                 const index = items.findIndex(
                                   (it) => it.key_variation === item.key
@@ -812,7 +803,7 @@ const UpdateProduct = () => {
                               }}
                               value={listVariationOptionChoosed
                                 .find((it) => it?.key_variation === item.key)
-                                ?.options.map((el: any) => el.value)}
+                                ?.options?.map((el: any) => el.value)}
                             />
                           </Form.Item>
                           <div className="flex gap-1.5 items-center">
@@ -860,7 +851,7 @@ const UpdateProduct = () => {
                     ))}
                   </div>
                 }
-                {listVariationChoosed && listVariationChoosed.length > 0 && (
+                {
                   <div className="text-right mt-4">
                     <Button
                       size="middle"
@@ -870,7 +861,8 @@ const UpdateProduct = () => {
                       Save Variation
                     </Button>
                   </div>
-                )}
+                }
+                <div className="mt-5 font-medium">Variations Of Products:</div>
                 {sampleSubProductVariation &&
                   sampleSubProductVariation.length > 0 && (
                     <div className="my-4">
@@ -880,17 +872,17 @@ const UpdateProduct = () => {
                         size="middle"
                         items={sampleSubProductVariation.map((item, index) => {
                           const label = item
-                            .map((it: any) => it.label)
+                            ?.map((it: any) => it.label)
                             .join(" - ");
 
-                          // const key_combi = item
-                          //   .map((it: any) => it.value)
-                          //   .join("-");
+                          const key_combi = item
+                            ?.map((it: any) => it.value)
+                            .join("-");
 
-                          const sub_product_id = item[0].sub_product_id;
+                          // const sub_product_id = item[0]?.sub_product_id;
 
                           const it = subProducts.find(
-                            (el) => el.sub_product_id === sub_product_id
+                            (el) => el?.key_combi === key_combi
                           );
 
                           let file: any = {
@@ -920,8 +912,7 @@ const UpdateProduct = () => {
                                         const { fileList } = props;
                                         const items = [...subProducts];
                                         const idx = items.findIndex(
-                                          (el) =>
-                                            el.sub_product_id === sub_product_id
+                                          (el) => el.key_combi === key_combi
                                         );
                                         if (idx !== -1) {
                                           items[idx].thumbnail =
@@ -943,15 +934,13 @@ const UpdateProduct = () => {
                                         placeholder="Enter Price"
                                         name="price"
                                         onChange={(e) => {
-                                          const { name, value } = e.target;
+                                          const { value } = e.target;
                                           const items = [...subProducts];
                                           const idx = items.findIndex(
-                                            (el) =>
-                                              el.sub_product_id ===
-                                              sub_product_id
+                                            (el) => el.key_combi === key_combi
                                           );
                                           if (idx !== -1) {
-                                            items[idx][name] = value;
+                                            items[idx]["price"] = value;
                                             setSubProducts(items);
                                           }
                                         }}
@@ -967,15 +956,13 @@ const UpdateProduct = () => {
                                         type="number"
                                         min={0}
                                         onChange={(e) => {
-                                          const { name, value } = e.target;
+                                          const { value } = e.target;
                                           const items = [...subProducts];
                                           const idx = items.findIndex(
-                                            (el) =>
-                                              el.sub_product_id ===
-                                              sub_product_id
+                                            (el) => el?.key_combi === key_combi
                                           );
                                           if (idx !== -1) {
-                                            items[idx][name] = value;
+                                            items[idx]["stock"] = value;
                                             setSubProducts(items);
                                           }
                                         }}

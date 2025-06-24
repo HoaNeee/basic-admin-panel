@@ -10,7 +10,6 @@ import type { VariationModel } from "../models/variationModel";
 
 interface Props {
   onAddNew?: (val: VariationModel) => void;
-  onFetch?: () => void;
   mesApi?: MessageInstance;
   select?: VariationModel;
   onCancel?: () => void;
@@ -18,7 +17,7 @@ interface Props {
 }
 
 const AddVariation = (props: Props) => {
-  const { onAddNew, mesApi, onFetch, select, onCancel, prefix_api } = props;
+  const { onAddNew, mesApi, select, onCancel, prefix_api } = props;
 
   const [isLoading, setIsLoading] = useState(false);
   const [form] = Form.useForm();

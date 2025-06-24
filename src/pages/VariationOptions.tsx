@@ -88,7 +88,10 @@ const VariationOptions = () => {
             />
             <Popconfirm
               title="Are you sure?"
-              onConfirm={() => handleDeleteItem(record)}
+              onConfirm={() => {
+                handleDeleteItem(record);
+                setOptions(options.filter((item) => item._id !== record._id));
+              }}
             >
               <Button type="text" icon={<CiTrash size={15} />} danger />
             </Popconfirm>

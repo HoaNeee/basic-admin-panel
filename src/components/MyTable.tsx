@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Table } from "antd";
 import { appColor } from "../constants/appColor";
+import type { TableRowSelection } from "antd/es/table/interface";
 
 interface Props {
   loading?: boolean;
@@ -10,18 +11,35 @@ interface Props {
   onShowSizeChange: (current: number, size: number) => void;
   total?: number;
   onChange: (page: number, limit: number) => void;
+  bordered?: boolean;
+  titleHeaderColor?: string;
+  isSelectionRow?: boolean;
+  onSelectChange?: (newSelect: React.Key[]) => void;
+  selectedRowKeys?: React.Key[];
 }
 
 const MyTable = (props: Props) => {
-  const { loading, columns, data, rowKey, onChange, onShowSizeChange, total } =
-    props;
+  const {
+    loading,
+    columns,
+    data,
+    rowKey,
+    onChange,
+    onShowSizeChange,
+    total,
+    bordered,
+    titleHeaderColor,
+    isSelectionRow,
+    onSelectChange,
+    selectedRowKeys,
+  } = props;
 
   const renderHeader = (children: any, props: any) => {
     return (
       <th
         {...props}
         style={{
-          color: appColor.gray300,
+          color: titleHeaderColor || appColor.gray300,
         }}
       >
         {children.children[1]}
@@ -29,8 +47,14 @@ const MyTable = (props: Props) => {
     );
   };
 
+  const rowSelection: TableRowSelection<any> = {
+    selectedRowKeys,
+    onChange: onSelectChange,
+  };
+
   return (
     <Table
+      bordered={bordered || false}
       loading={loading}
       columns={columns}
       dataSource={data}
@@ -41,6 +65,7 @@ const MyTable = (props: Props) => {
         onChange,
         showQuickJumper: true,
       }}
+      rowSelection={isSelectionRow ? rowSelection : undefined}
       scroll={{
         y: 470,
       }}

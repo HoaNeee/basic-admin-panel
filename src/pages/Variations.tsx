@@ -87,7 +87,12 @@ const Variations = () => {
             />
             <Popconfirm
               title="Are you sure?"
-              onConfirm={() => handleDeleteItem(record)}
+              onConfirm={() => {
+                handleDeleteItem(record);
+                setVariations(
+                  variations.filter((item) => item._id !== record._id)
+                );
+              }}
             >
               <Button type="text" icon={<CiTrash size={15} />} danger />
             </Popconfirm>
@@ -123,6 +128,7 @@ const Variations = () => {
                   }
                 }
               }}
+              prefix_api={prefix_api}
             />
           </Card>
         </div>

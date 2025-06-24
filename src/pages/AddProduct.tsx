@@ -28,13 +28,18 @@ import { createTree } from "../helpers/createTree";
 import type { Supplier } from "../models/supplier";
 import type { CategoryModel } from "../models/categoryModel";
 import type { SelectModel } from "../models/formModel";
-import type { VariationModel } from "../models/variationModel";
+import type {
+  VariationChoosedModel,
+  VariationModel,
+  VariationOptionChoosedModel,
+} from "../models/variationModel";
 import { TiDelete } from "react-icons/ti";
 import { BiSolidPlusSquare } from "react-icons/bi";
 import { useNavigate } from "react-router";
 import { genCombinations } from "../helpers/genCombinations";
 import UploadImage from "../components/UploadImage";
 import ModalVariationOption from "../components/modals/ModalVariationOption";
+import type { SubProductModel } from "../models/productModel";
 
 const AddProduct = () => {
   const [suppliers, setSuppliers] = useState<SelectModel[]>([]);
@@ -48,37 +53,19 @@ const AddProduct = () => {
     []
   );
 
-  const [listVariationChoosed, setListVariationChoosed] = useState<any[]>([]);
-  /*listVariation -> select -> 
-    {
-      key: string,
-      select: []
-    }
-  */
-  const [listVariationOptionChoosed, setListVariationOptionChoosed] = useState<
-    any[]
+  const [listVariationChoosed, setListVariationChoosed] = useState<
+    VariationChoosedModel[]
   >([]);
-  /* listVariationOption ->
-      key_variation: string,
-      title: string,
-      options: {
-        label: string,
-        value: string
-      },
-  */
+
+  const [listVariationOptionChoosed, setListVariationOptionChoosed] = useState<
+    VariationOptionChoosedModel[]
+  >([]);
+
   const [sampleSubProductVariation, setSampleSubProductVariation] = useState<
     any[]
   >([]);
 
-  const [subProducts, setSubProducts] = useState<any[]>([]);
-  /*
-    {
-      key_combi: string,
-      price: string,
-      stock: string,
-      sub_idL: string
-    }
-  */
+  const [subProducts, setSubProducts] = useState<SubProductModel[]>([]);
 
   const [albumProduct, setAlbumProduct] = useState<UploadFile[]>([]);
   const [thumbnail, setThumbnail] = useState<any>();
@@ -146,9 +133,9 @@ const AddProduct = () => {
 
       for (const item of subProducts) {
         items.push({
-          options: item.key_combi.split("-"),
-          price: item?.price || "",
-          stock: item?.stock || "",
+          options: item?.key_combi?.split("-"),
+          price: item?.price || 0,
+          stock: item?.stock || 0,
           thumbnail: item?.thumbnail || "",
         });
       }
@@ -253,7 +240,7 @@ const AddProduct = () => {
   const handleCreateSubProduct = () => {
     if (
       listVariationChoosed.length !== listVariationOptionChoosed.length ||
-      listVariationOptionChoosed.some((it) => it.options.length === 0)
+      listVariationOptionChoosed.some((it) => it?.options?.length === 0)
     ) {
       mesApi.error(
         "Please choose at least one option or delete variation empty!"
@@ -361,26 +348,28 @@ const AddProduct = () => {
                   }}
                 />
               </Form.Item>
-              <div className="flex gap-2">
-                {productType === "simple" && (
-                  <Form.Item label="Price" name={"price"} className="w-full">
+              {productType === "simple" && (
+                <div className="flex gap-2">
+                  {
+                    <Form.Item label="Price" name={"price"} className="w-full">
+                      <InputNumber
+                        type="number"
+                        placeholder="Enter price"
+                        style={{
+                          width: "100%",
+                        }}
+                      />
+                    </Form.Item>
+                  }
+                  <Form.Item label="Stock" name={"stock"} className="w-full">
                     <InputNumber
                       type="number"
-                      placeholder="Enter price"
-                      style={{
-                        width: "100%",
-                      }}
+                      placeholder="Enter stock"
+                      style={{ width: "100%" }}
                     />
                   </Form.Item>
-                )}
-                <Form.Item label="Stock" name={"stock"} className="w-full">
-                  <InputNumber
-                    type="number"
-                    placeholder="Enter stock"
-                    style={{ width: "100%" }}
-                  />
-                </Form.Item>
-              </div>
+                </div>
+              )}
 
               <Form.Item label="Short Description" name={"shortDescription"}>
                 <TextArea
@@ -572,7 +561,7 @@ const AddProduct = () => {
                 }
               >
                 <div className="flex flex-col gap-2">
-                  {listVariationChoosed.map((item) => (
+                  {listVariationChoosed.map((item: VariationChoosedModel) => (
                     <div key={item.key} className="flex gap-4 items-center">
                       <div className="rounded border py-1 px-2 border-[#ddd] w-2/12 text-center">
                         {findItem(variations, item.key)?.title || ""}
@@ -590,7 +579,7 @@ const AddProduct = () => {
                             options={
                               listVariationChoosed.find(
                                 (it) => it.key === item.key
-                              ).select || []
+                              )?.select || []
                             }
                             placeholder="Choose options"
                             size="middle"
@@ -598,7 +587,7 @@ const AddProduct = () => {
                               width: "100%",
                             }}
                             mode="tags"
-                            onChange={(_val, option) => {
+                            onChange={(_val, option: any) => {
                               const items = [...listVariationOptionChoosed];
                               const index = items.findIndex(
                                 (it) => it.key_variation === item.key
@@ -667,7 +656,7 @@ const AddProduct = () => {
                     </div>
                   ))}
                 </div>
-                {listVariationChoosed && listVariationChoosed.length > 0 && (
+                {
                   <div className="text-right mt-4">
                     <Button
                       size="middle"
@@ -677,7 +666,8 @@ const AddProduct = () => {
                       Create
                     </Button>
                   </div>
-                )}
+                }
+                <div className="mt-5 font-medium">Variations Of Products:</div>
                 {sampleSubProductVariation &&
                   sampleSubProductVariation.length > 0 && (
                     <div className="my-4">
@@ -735,13 +725,13 @@ const AddProduct = () => {
                                         placeholder="Enter Price"
                                         name="price"
                                         onChange={(e) => {
-                                          const { name, value } = e.target;
+                                          const { value } = e.target;
                                           const items = [...subProducts];
                                           const idx = items.findIndex(
                                             (el) => el.key_combi === key_combi
                                           );
                                           if (idx !== -1) {
-                                            items[idx][name] = value;
+                                            items[idx]["price"] = value;
                                             setSubProducts(items);
                                           }
                                         }}
@@ -756,13 +746,13 @@ const AddProduct = () => {
                                         type="number"
                                         min={0}
                                         onChange={(e) => {
-                                          const { name, value } = e.target;
+                                          const { value } = e.target;
                                           const items = [...subProducts];
                                           const idx = items.findIndex(
                                             (el) => el.key_combi === key_combi
                                           );
                                           if (idx !== -1) {
-                                            items[idx][name] = value;
+                                            items[idx]["stock"] = value;
                                             setSubProducts(items);
                                           }
                                         }}

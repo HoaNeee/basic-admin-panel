@@ -120,7 +120,7 @@ const AddVariationOption = (props: Props) => {
             if (onCancel) {
               onCancel();
             }
-            if (!isModal) {
+            if (!isModal && !select) {
               navigate(-1);
             }
           }}
