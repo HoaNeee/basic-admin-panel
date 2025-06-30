@@ -47,7 +47,7 @@ const AddCategory = (props: Props) => {
   }, [select]);
 
   const findSelfCat = (data: any[] = [], id = "") => {
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < data?.length || 0; i++) {
       if (data[i].value === id) {
         data[i].disabled = true;
       } else {

@@ -11,7 +11,7 @@ export const createTree = (
       if (item[key] !== undefined || item[key] === "") {
         children = createTree(data, item[key], key);
       }
-      item.children = [...children];
+      item.children = children && children.length > 0 ? [...children] : null;
       arr.push(item);
     }
   }

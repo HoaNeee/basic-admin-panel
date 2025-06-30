@@ -10,6 +10,7 @@ import { LuClipboardList } from "react-icons/lu";
 import Logo from "../assets/logo.png";
 import { TiTags } from "react-icons/ti";
 import { appName } from "../constants/appName";
+import { RiDiscountPercentLine } from "react-icons/ri";
 
 const items: MenuProps["items"] = [
   {
@@ -112,6 +113,15 @@ const items: MenuProps["items"] = [
       </Link>
     ),
     icon: <LuClipboardList size={20} />,
+  },
+  {
+    key: "/promotions",
+    label: (
+      <Link to={"/promotions"} className="font-medium">
+        Promotions
+      </Link>
+    ),
+    icon: <RiDiscountPercentLine size={20} />,
   },
 ];
 

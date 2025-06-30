@@ -29,7 +29,6 @@ const Variations = () => {
     try {
       setIsLoading(true);
       const response = await handleAPI(api);
-      // console.log(response);
       setVariations(response.data);
     } catch (error) {
       console.log(error);

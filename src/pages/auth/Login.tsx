@@ -1,12 +1,11 @@
-import LogoApp from "../assets/logo.png";
-
+import LogoApp from "../../assets/logo.png";
 import { Button, Checkbox, Form, Input, message } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { Link, useNavigate } from "react-router";
-import { handleAPI } from "../apis/request";
+import { handleAPI } from "../../apis/request";
 import { useDispatch } from "react-redux";
-import { addAuth } from "../redux/reducers/authReducer";
-import SocialLogin from "../components/SocialLogin";
+import { addAuth } from "../../redux/reducers/authReducer";
+import SocialLogin from "../../components/SocialLogin";
 import { useState } from "react";
 
 const Login = () => {

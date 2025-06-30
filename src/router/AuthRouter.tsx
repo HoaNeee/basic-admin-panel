@@ -1,8 +1,7 @@
-import React from "react";
 import { BrowserRouter, Route, Routes } from "react-router";
 import AuthLayout from "../layouts/AuthLayout";
-import Login from "../pages/Login";
-import Register from "../pages/Register";
+import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
 
 // const authRouter = createBrowserRouter([
 //   {

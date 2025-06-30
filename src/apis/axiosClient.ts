@@ -2,7 +2,7 @@ import axios from "axios";
 import queryString from "query-string";
 import { appName } from "../constants/appName";
 
-const BASE_URL = `http://localhost:3001`;
+const BASE_URL = `http://localhost:3001/admin`;
 
 const axiosClient = axios.create({
   baseURL: BASE_URL,
@@ -51,6 +51,7 @@ axiosClient.interceptors.response.use(
         });
         if (!res || res.data.code > 300) {
           localStorage.clear();
+          window.location.href = "/";
           return Promise.reject(res.data);
         }
         const data = {

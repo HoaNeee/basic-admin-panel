@@ -33,6 +33,7 @@ export interface SubProductModel {
   SKU?: string;
   key_combi?: string;
   sub_product_id?: string;
+  discountedPrice?: number | string;
 }
 
 export interface SubProductOptionModel {

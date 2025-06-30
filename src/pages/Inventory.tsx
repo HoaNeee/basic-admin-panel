@@ -10,6 +10,7 @@ import {
   Flex,
   Input,
   message,
+  Modal,
   Popconfirm,
   Space,
   Tag,
@@ -23,6 +24,8 @@ import type { CategoryModel } from "../models/categoryModel";
 import { RiSubtractFill } from "react-icons/ri";
 import { RiDeleteBin5Line } from "react-icons/ri";
 import FilterProduct from "../components/FilterProduct";
+import { ExclamationCircleOutlined } from "@ant-design/icons";
+import { VND } from "../helpers/formatCurrency";
 
 const Inventory = () => {
   const prefix_api = "/products";
@@ -37,8 +40,10 @@ const Inventory = () => {
   const [keyword, setKeyword] = useState("");
   const [isFilter, setIsFilter] = useState(false);
   const [valueFilter, setValueFilter] = useState<any>();
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const [mesApi, contextHolder] = message.useMessage();
+  const [modal, contextHolderModal] = Modal.useModal();
 
   const navigate = useNavigate();
 
@@ -48,17 +53,31 @@ const Inventory = () => {
 
   useEffect(() => {
     if (!isFilter) {
-      getProducts();
+      getProducts(keyword);
+    } else {
+      handleFilter(valueFilter, keyword);
     }
-  }, [page, limit, keyword]);
+  }, [page, limit]);
 
   useEffect(() => {
-    if (isFilter) {
-      handleFilter(valueFilter);
+    if (isFilter && keyword) {
+      handleFilter(valueFilter, keyword);
+    } else if (keyword) {
+      if (page !== 1) {
+        setPage(1);
+      } else {
+        getProducts(keyword);
+      }
     }
   }, [keyword]);
 
-  const getProducts = async () => {
+  useEffect(() => {
+    if (isFilter) {
+      handleFilter(valueFilter, keyword);
+    }
+  }, [valueFilter]);
+
+  const getProducts = async (keyword: string = "") => {
     const api = prefix_api + `?page=${page}&limit=${limit}&keyword=${keyword}`;
     try {
       setIsLoading(true);
@@ -67,6 +86,20 @@ const Inventory = () => {
       setTotalRecord(response.data.totalRecord);
     } catch (error: any) {
       console.log(error);
+      mesApi.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFilter = async (values: any, keyword: string = "") => {
+    try {
+      setIsLoading(true);
+      const api = `/products/filter-product?keyword=${keyword}&page=${page}&limit=${limit}`;
+      const response = await handleAPI(api, values, "post");
+      setProducts(response.data.products);
+      setTotalRecord(response.data.totalRecord);
+    } catch (error: any) {
       mesApi.error(error.message);
     } finally {
       setIsLoading(false);
@@ -83,17 +116,70 @@ const Inventory = () => {
     }
   };
 
-  const handleFilter = async (values: any) => {
+  const confirm = () => {
+    modal.confirm({
+      content: `Are you sure? You selected ${selectedRowKeys.length} items`,
+      closable: true,
+      title: "Confirm",
+      icon: <ExclamationCircleOutlined />,
+      okText: "OK",
+      cancelText: "Cancel",
+      onOk: async () => {
+        const api = `/products/change-multi`;
+        try {
+          setIsUpdating(true);
+          const key = "delete-items";
+          mesApi.open({
+            key,
+            type: "loading",
+            content: "Loading...",
+          });
+
+          const response: any = await handleAPI(
+            api,
+            {
+              action: "delete-all",
+              payload: selectedRowKeys,
+            },
+            "patch"
+          );
+          mesApi.open({
+            key,
+            type: "success",
+            content: response.message,
+          });
+          if (selectedRowKeys.length === products.length) {
+            // setTotalRecord(totalRecord - selectedRowKeys.length);
+            setPage(page - 1);
+            setSelectedRowKeys([]);
+          } else {
+            await getProducts();
+          }
+        } catch (error: any) {
+          mesApi.error(error.message);
+        } finally {
+          setIsUpdating(false);
+        }
+      },
+
+      okButtonProps: {
+        disabled: isUpdating,
+      },
+    });
+  };
+
+  const handleDeleteProduct = async (product_id: string) => {
+    const api = `/products/delete/${product_id}`;
     try {
-      setIsLoading(true);
-      const api = `/products/filter-product?keyword=${keyword}`;
-      const response = await handleAPI(api, values, "post");
-      setProducts(response.data.products);
-      setTotalRecord(0);
+      const response: any = await handleAPI(api, undefined, "delete");
+      mesApi.success(response.message);
+      if (isFilter) {
+        await handleFilter(valueFilter, keyword);
+      } else {
+        await getProducts();
+      }
     } catch (error: any) {
       mesApi.error(error.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -174,19 +260,33 @@ const Inventory = () => {
       },
     },
     {
+      key: "SKU",
+      dataIndex: "SKU",
+      title: "SKU",
+      render: (value, _record, index) => {
+        return value ? value : <RiSubtractFill key={index} />;
+      },
+    },
+    {
       key: "price",
       dataIndex: "price",
       title: "Price",
       render: (value: number, record, index) => {
-        return value !== null &&
-          value !== undefined &&
-          record.productType !== "variations" ? (
-          value.toLocaleString()
-        ) : record?.rangePrice ? (
-          `${record?.rangePrice.min} - ${record?.rangePrice.max}`
-        ) : (
-          <RiSubtractFill key={index} />
-        );
+        if (value !== null && value !== undefined) {
+          if (record.productType !== "variations") {
+            return "" + VND.format(value);
+          }
+          if (
+            record?.rangePrice &&
+            (record.rangePrice.min || record.rangePrice.max)
+          ) {
+            return `${VND.format(record?.rangePrice?.min)} - ${VND.format(
+              record?.rangePrice?.max
+            )}`;
+          }
+          return <RiSubtractFill key={index} />;
+        }
+        return <RiSubtractFill key={index} />;
       },
     },
     {
@@ -209,7 +309,7 @@ const Inventory = () => {
     {
       key: "productType",
       dataIndex: "productType",
-      title: "Product Type",
+      title: "Type",
     },
     {
       key: "action",
@@ -227,7 +327,10 @@ const Inventory = () => {
                 }}
               />
             </div>
-            <Popconfirm title="Are you sure?" onConfirm={() => {}}>
+            <Popconfirm
+              title="Are you sure?"
+              onConfirm={() => handleDeleteProduct(record._id)}
+            >
               <Button
                 type="link"
                 icon={<RiDeleteBin5Line size={20} />}
@@ -244,6 +347,7 @@ const Inventory = () => {
   return (
     <>
       {contextHolder}
+      {contextHolderModal}
       <div className="bg-white w-full h-full px-3 py-2 rounded-sm">
         <Flex justify="space-between" align="center">
           <div className="flex gap-4 items-center">
@@ -251,7 +355,23 @@ const Inventory = () => {
             {selectedRowKeys.length > 0 && (
               <>
                 <p>{selectedRowKeys.length} selected</p>
-                <Button>Option</Button>
+                <Dropdown
+                  placement="bottom"
+                  arrow
+                  trigger={["click"]}
+                  popupRender={() => {
+                    return (
+                      <div className="dropdown-filter w-60 bg-white p-5 flex flex-col gap-2">
+                        <Button block onClick={confirm}>
+                          Delete All
+                        </Button>
+                        <Button block>---------</Button>
+                      </div>
+                    );
+                  }}
+                >
+                  <Button>Option</Button>
+                </Dropdown>
               </>
             )}
           </div>
@@ -281,16 +401,16 @@ const Inventory = () => {
                     values={{
                       categories: categories,
                     }}
-                    onFilter={(values: any) => {
+                    onFilter={async (values: any) => {
                       setIsFilter(true);
                       setValueFilter(values);
-                      handleFilter(values);
+                      // await handleFilter(values, keyword);
                     }}
                     onClear={async () => {
                       setIsFilter(false);
-                      if (isFilter) {
-                        await getProducts();
-                      }
+                      // if (isFilter) {
+                      await getProducts(keyword);
+                      // }
                     }}
                   />
                 );
@@ -311,12 +431,13 @@ const Inventory = () => {
           <MyTable
             columns={columns}
             data={products}
-            onChange={(page) => {
-              setPage(page);
-            }}
-            onShowSizeChange={(_current, size) => {
-              setPage(1);
-              setLimit(size);
+            pagination={{
+              onChange(page, pageSize) {
+                setPage(page);
+                setLimit(pageSize);
+              },
+              total: totalRecord,
+              showQuickJumper: true,
             }}
             rowKey="_id"
             loading={isLoading}

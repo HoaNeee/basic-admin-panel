@@ -6,11 +6,12 @@ import Reports from "../pages/Reports";
 import Suppliers from "../pages/Suppliers";
 import Orders from "../pages/Orders";
 import ManageStore from "../pages/ManageStore";
-import AddProduct from "../pages/AddProduct";
+import AddProduct from "../pages/product/AddProduct";
 import Category from "../pages/Category";
 import Variations from "../pages/Variations";
 import VariationOptions from "../pages/VariationOptions";
-import UpdateProduct from "../pages/UpdateProduct";
+import UpdateProduct from "../pages/product/UpdateProduct";
+import Promotions from "../pages/Promotions";
 
 // const mainRouter = createBrowserRouter([
 //   {
@@ -45,6 +46,7 @@ const MainRouter = () => {
           <Route element={<Suppliers />} path="suppliers" />
           <Route element={<Orders />} path="orders" />
           <Route element={<ManageStore />} path="manage-store" />
+          <Route element={<Promotions />} path="promotions" />
         </Route>
       </Routes>
     </BrowserRouter>

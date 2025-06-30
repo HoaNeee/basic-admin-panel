@@ -1,21 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Table } from "antd";
 import { appColor } from "../constants/appColor";
-import type { TableRowSelection } from "antd/es/table/interface";
+import type {
+  TablePaginationConfig,
+  TableRowSelection,
+} from "antd/es/table/interface";
+import { useEffect, useState } from "react";
 
 interface Props {
   loading?: boolean;
   columns: any[];
   data: any[];
   rowKey: string;
-  onShowSizeChange: (current: number, size: number) => void;
+  onShowSizeChange?: (current: number, size: number) => void;
   total?: number;
-  onChange: (page: number, limit: number) => void;
+  onChange?: (page: number, limit: number) => void;
   bordered?: boolean;
   titleHeaderColor?: string;
   isSelectionRow?: boolean;
   onSelectChange?: (newSelect: React.Key[]) => void;
   selectedRowKeys?: React.Key[];
+  pagination?: false | TablePaginationConfig | undefined;
 }
 
 const MyTable = (props: Props) => {
@@ -32,7 +37,14 @@ const MyTable = (props: Props) => {
     isSelectionRow,
     onSelectChange,
     selectedRowKeys,
+    pagination,
   } = props;
+
+  const [totalRecord, setTotalRecord] = useState(0);
+
+  useEffect(() => {
+    setTotalRecord(total || 0);
+  }, [total]);
 
   const renderHeader = (children: any, props: any) => {
     return (
@@ -59,12 +71,16 @@ const MyTable = (props: Props) => {
       columns={columns}
       dataSource={data}
       rowKey={rowKey}
-      pagination={{
-        onShowSizeChange,
-        total: total,
-        onChange,
-        showQuickJumper: true,
-      }}
+      pagination={
+        pagination
+          ? pagination
+          : {
+              onShowSizeChange,
+              total: totalRecord,
+              onChange,
+              showQuickJumper: true,
+            }
+      }
       rowSelection={isSelectionRow ? rowSelection : undefined}
       scroll={{
         y: 470,

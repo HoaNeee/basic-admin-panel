@@ -7,6 +7,7 @@ import {
   Form,
   InputNumber,
   message,
+  Popconfirm,
   Select,
   Space,
   theme,
@@ -15,31 +16,31 @@ import {
   type UploadFile,
   type UploadProps,
 } from "antd";
-import Loading from "../components/Loading";
+import Loading from "../../components/Loading";
 import { Input } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { Editor } from "@tinymce/tinymce-react";
 import { FaPlus } from "react-icons/fa6";
-import ModalCategory from "../components/modals/ModalCategory";
-import { handleAPI, uploadImage, uploadImageMulti } from "../apis/request";
+import ModalCategory from "../../components/modals/ModalCategory";
+import { handleAPI, uploadImage, uploadImageMulti } from "../../apis/request";
 import { useEffect, useRef, useState } from "react";
-import { rules } from "../helpers/rulesGeneral";
-import { createTree } from "../helpers/createTree";
-import type { Supplier } from "../models/supplier";
-import type { CategoryModel } from "../models/categoryModel";
-import type { SelectModel } from "../models/formModel";
+import { rules } from "../../helpers/rulesGeneral";
+import { createTree } from "../../helpers/createTree";
+import type { Supplier } from "../../models/supplier";
+import type { CategoryModel } from "../../models/categoryModel";
+import type { SelectModel } from "../../models/formModel";
 import type {
   VariationChoosedModel,
   VariationModel,
   VariationOptionChoosedModel,
-} from "../models/variationModel";
+} from "../../models/variationModel";
 import { TiDelete } from "react-icons/ti";
 import { BiSolidPlusSquare } from "react-icons/bi";
 import { useNavigate } from "react-router";
-import { genCombinations } from "../helpers/genCombinations";
-import UploadImage from "../components/UploadImage";
-import ModalVariationOption from "../components/modals/ModalVariationOption";
-import type { SubProductModel } from "../models/productModel";
+import { genCombinations } from "../../helpers/genCombinations";
+import UploadImage from "../../components/UploadImage";
+import ModalVariationOption from "../../components/modals/ModalVariationOption";
+import type { SubProductModel } from "../../models/productModel";
 
 const AddProduct = () => {
   const [suppliers, setSuppliers] = useState<SelectModel[]>([]);
@@ -62,7 +63,7 @@ const AddProduct = () => {
   >([]);
 
   const [sampleSubProductVariation, setSampleSubProductVariation] = useState<
-    any[]
+    [SelectModel][]
   >([]);
 
   const [subProducts, setSubProducts] = useState<SubProductModel[]>([]);
@@ -137,6 +138,8 @@ const AddProduct = () => {
           price: item?.price || 0,
           stock: item?.stock || 0,
           thumbnail: item?.thumbnail || "",
+          discountedPrice: item?.discountedPrice,
+          SKU: item?.SKU,
         });
       }
 
@@ -259,6 +262,7 @@ const AddProduct = () => {
         price: "",
         stock: "",
         thumbnail: "",
+        discountedPrice: "",
       });
     }
 
@@ -350,17 +354,35 @@ const AddProduct = () => {
               </Form.Item>
               {productType === "simple" && (
                 <div className="flex gap-2">
-                  {
-                    <Form.Item label="Price" name={"price"} className="w-full">
-                      <InputNumber
-                        type="number"
-                        placeholder="Enter price"
-                        style={{
-                          width: "100%",
-                        }}
-                      />
-                    </Form.Item>
-                  }
+                  <Form.Item label="Price" name={"price"} className="w-full">
+                    <InputNumber
+                      type="number"
+                      placeholder="Enter price"
+                      style={{
+                        width: "100%",
+                      }}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Discounted Price"
+                    name={"discountedPrice"}
+                    className="w-full"
+                  >
+                    <InputNumber
+                      type="number"
+                      placeholder="Enter discounted price"
+                      style={{ width: "100%" }}
+                    />
+                  </Form.Item>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Form.Item label="SKU" name={"SKU"} className="w-full">
+                  <Input placeholder="Enter SKU" style={{ width: "100%" }} />
+                </Form.Item>
+                {productType === "simple" && (
                   <Form.Item label="Stock" name={"stock"} className="w-full">
                     <InputNumber
                       type="number"
@@ -368,8 +390,8 @@ const AddProduct = () => {
                       style={{ width: "100%" }}
                     />
                   </Form.Item>
-                </div>
-              )}
+                )}
+              </div>
 
               <Form.Item label="Short Description" name={"shortDescription"}>
                 <TextArea
@@ -690,11 +712,64 @@ const AddProduct = () => {
 
                           return {
                             key: index,
-                            label: <p className="font-medium">{label}</p>,
+                            extra: (
+                              <>
+                                <Popconfirm
+                                  onCancel={(e) => {
+                                    e?.stopPropagation();
+                                  }}
+                                  onConfirm={(e) => {
+                                    e?.stopPropagation();
+                                    const sampleMap = new Map();
+                                    for (const item of sampleSubProductVariation) {
+                                      const key_combi = item
+                                        .map((it: SelectModel) => it.value)
+                                        .join("-");
+                                      sampleMap.set(key_combi, item);
+                                    }
+
+                                    sampleMap.set(key_combi, null);
+
+                                    const items: [SelectModel][] = [];
+                                    sampleMap.forEach((val) => {
+                                      if (val) {
+                                        items.push(val);
+                                      }
+                                    });
+                                    setSubProducts(
+                                      subProducts.filter(
+                                        (it) => it.key_combi !== key_combi
+                                      )
+                                    );
+                                    setSampleSubProductVariation(items);
+                                  }}
+                                  title="Are you sure?"
+                                >
+                                  <Button
+                                    size="small"
+                                    type="link"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                    }}
+                                    style={{ color: "red", fontSize: 12 }}
+                                  >
+                                    Remove
+                                  </Button>
+                                </Popconfirm>
+                              </>
+                            ),
+
+                            label: (
+                              <>
+                                <div className="">
+                                  <p className="font-medium">{label}</p>
+                                </div>
+                              </>
+                            ),
                             children: (
                               <div>
                                 <Card style={{ borderRadius: 0 }}>
-                                  <div className="mb-2">
+                                  <div className="flex justify-between items-center">
                                     <Upload
                                       maxCount={1}
                                       listType="picture-card"
@@ -716,8 +791,52 @@ const AddProduct = () => {
                                     >
                                       {renderButtonUpload()}
                                     </Upload>
+                                    <div className="w-1/2 flex flex-col gap-2">
+                                      <div className="w-full">
+                                        <label className="text-sm">SKU: </label>
+                                        <Input
+                                          size="middle"
+                                          value={it?.SKU}
+                                          placeholder="Enter SKU"
+                                          name="SKU"
+                                          onChange={(e) => {
+                                            const { value } = e.target;
+                                            const items = [...subProducts];
+                                            const idx = items.findIndex(
+                                              (el) => el.key_combi === key_combi
+                                            );
+                                            if (idx !== -1) {
+                                              items[idx]["SKU"] = value;
+                                              setSubProducts(items);
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                      <div className="w-full">
+                                        <label className="text-sm">
+                                          Stock:{" "}
+                                        </label>
+                                        <Input
+                                          size="middle"
+                                          value={it?.stock}
+                                          placeholder="Enter stock"
+                                          name="stock"
+                                          onChange={(e) => {
+                                            const { value } = e.target;
+                                            const items = [...subProducts];
+                                            const idx = items.findIndex(
+                                              (el) => el.key_combi === key_combi
+                                            );
+                                            if (idx !== -1) {
+                                              items[idx]["stock"] = value;
+                                              setSubProducts(items);
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="flex gap-3 w-full">
+                                  <div className="flex gap-3 w-full mt-6">
                                     <div className="w-full">
                                       <label>Price: </label>
                                       <Input
@@ -739,10 +858,11 @@ const AddProduct = () => {
                                       />
                                     </div>
                                     <div className="w-full">
-                                      <label>Stock: </label>
+                                      <label>Discounted Price: </label>
                                       <Input
-                                        placeholder="Enter Stock"
-                                        name="stock"
+                                        value={it?.discountedPrice}
+                                        placeholder="Enter discounted price"
+                                        name="discountedPrice"
                                         type="number"
                                         min={0}
                                         onChange={(e) => {
@@ -752,7 +872,8 @@ const AddProduct = () => {
                                             (el) => el.key_combi === key_combi
                                           );
                                           if (idx !== -1) {
-                                            items[idx]["stock"] = value;
+                                            items[idx]["discountedPrice"] =
+                                              value;
                                             setSubProducts(items);
                                           }
                                         }}
