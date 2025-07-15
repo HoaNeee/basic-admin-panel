@@ -20,56 +20,55 @@ const Home = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const res = [];
-        const res1: any = await handleAPI(
-          "https://dummyjson.com/products/category/mens-shoes"
-        );
-
-        const res2: any = await handleAPI(
-          "https://dummyjson.com/products/category/mens-shirts"
-        );
-        const res3: any = await handleAPI(
-          "https://dummyjson.com/products/category/womens-bags"
-        );
-        const res6: any = await handleAPI(
-          "https://dummyjson.com/products/category/womens-dresses"
-        );
-        const res4: any = await handleAPI(
-          "https://dummyjson.com/products/category/womens-jewellery"
-        );
-        const res5: any = await handleAPI(
-          "https://dummyjson.com/products/category/womens-shoes"
-        );
-        res.push(res1.products);
-        res.push(res2.products);
-        res.push(res3.products);
-        res.push(res4.products);
-        res.push(res5.products);
-        res.push(res6.products);
-        setData(
-          res.flat(1).map((item) => {
-            return {
-              content: item.description,
-              title: item.title,
-              sku: item.sku,
-              stock: item.stock,
-              thumbnail: item.thumbnail,
-              images: item.images,
-              shortDescription:
-                item.title + ` - ${item.brand} - ${item.category}`,
-            };
-          })
-        );
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
+    // const fetchData = async () => {
+    //   try {
+    //     setIsLoading(true);
+    //     const res = [];
+    //     const res1: any = await handleAPI(
+    //       "https://dummyjson.com/products/category/mens-shoes"
+    //     );
+    //     const res2: any = await handleAPI(
+    //       "https://dummyjson.com/products/category/mens-shirts"
+    //     );
+    //     const res3: any = await handleAPI(
+    //       "https://dummyjson.com/products/category/womens-bags"
+    //     );
+    //     const res6: any = await handleAPI(
+    //       "https://dummyjson.com/products/category/womens-dresses"
+    //     );
+    //     const res4: any = await handleAPI(
+    //       "https://dummyjson.com/products/category/womens-jewellery"
+    //     );
+    //     const res5: any = await handleAPI(
+    //       "https://dummyjson.com/products/category/womens-shoes"
+    //     );
+    //     res.push(res1.products);
+    //     res.push(res2.products);
+    //     res.push(res3.products);
+    //     res.push(res4.products);
+    //     res.push(res5.products);
+    //     res.push(res6.products);
+    //     setData(
+    //       res.flat(1).map((item) => {
+    //         return {
+    //           content: item.description,
+    //           title: item.title,
+    //           sku: item.sku,
+    //           stock: item.stock,
+    //           thumbnail: item.thumbnail,
+    //           images: item.images,
+    //           shortDescription:
+    //             item.title + ` - ${item.brand} - ${item.category}`,
+    //         };
+    //       })
+    //     );
+    //   } catch (error) {
+    //     console.log(error);
+    //   } finally {
+    //     setIsLoading(false);
+    //   }
+    // };
+    // fetchData();
   }, []);
 
   const cats = [
@@ -180,7 +179,7 @@ const Home = () => {
 
   const handleAdd = async () => {
     try {
-      for (let i = 0; i < 80; i++) {
+      for (let i = 0; i < 100; i++) {
         const index = random(0, data.length);
 
         const productType = random(0, 2);
@@ -331,6 +330,19 @@ const Home = () => {
     dispatch(removeAuth());
   };
 
+  const handleUpdate = async () => {
+    try {
+      const response = await handleAPI(
+        "/products/update-1",
+        undefined,
+        "patch"
+      );
+      console.log(response);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <div>
       {isLoading && <Loading type="screen" />}
@@ -339,6 +351,7 @@ const Home = () => {
       </Button>
       <br />
       <Button onClick={handleAdd}>Add data demo</Button>
+      <Button onClick={handleUpdate}>Update</Button>
     </div>
   );
 };

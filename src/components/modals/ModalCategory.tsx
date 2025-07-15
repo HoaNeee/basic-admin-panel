@@ -33,6 +33,7 @@ const ModalCategory = (props: Props) => {
           closeModal();
         }}
         mesApi={mesApi}
+        onCancel={closeModal}
       />
     </Modal>
   );

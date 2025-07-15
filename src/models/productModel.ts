@@ -7,6 +7,7 @@ export interface ProductModel {
   shortDescription?: string;
   categories: string[];
   price?: number | string;
+  cost?: number | string;
   stock?: number | string;
   productType: "simple" | "variations";
   images?: string[];
@@ -34,6 +35,7 @@ export interface SubProductModel {
   key_combi?: string;
   sub_product_id?: string;
   discountedPrice?: number | string;
+  cost?: number | string;
 }
 
 export interface SubProductOptionModel {

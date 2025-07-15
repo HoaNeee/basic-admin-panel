@@ -97,13 +97,27 @@ const items: MenuProps["items"] = [
     icon: <LuCircleUserRound size={20} />,
   },
   {
-    key: "/orders",
-    label: (
-      <Link to={"/orders"} className="font-medium">
-        Orders
-      </Link>
-    ),
+    key: "orders",
+    label: <p className="font-medium">Orders</p>,
     icon: <BsBoxSeam size={20} />,
+    children: [
+      {
+        key: "/order",
+        label: (
+          <Link to={"/orders"} className="font-medium">
+            All
+          </Link>
+        ),
+      },
+      {
+        key: "/add-purchase-order",
+        label: (
+          <Link to={"/orders/add-purchase-order"} className="font-medium">
+            New Order
+          </Link>
+        ),
+      },
+    ],
   },
   {
     key: "/manage-store",

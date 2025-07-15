@@ -12,7 +12,6 @@ import {
   Space,
   theme,
   TreeSelect,
-  Upload,
   type UploadFile,
   type UploadProps,
 } from "antd";
@@ -41,6 +40,7 @@ import { genCombinations } from "../../helpers/genCombinations";
 import UploadImage from "../../components/UploadImage";
 import ModalVariationOption from "../../components/modals/ModalVariationOption";
 import type { SubProductModel } from "../../models/productModel";
+import UploadImagePreview from "../../components/UploadImagePreview";
 
 const AddProduct = () => {
   const [suppliers, setSuppliers] = useState<SelectModel[]>([]);
@@ -70,8 +70,6 @@ const AddProduct = () => {
 
   const [albumProduct, setAlbumProduct] = useState<UploadFile[]>([]);
   const [thumbnail, setThumbnail] = useState<any>();
-  const [previewImage, setPreviewImage] = useState<any>();
-  const [previewOpen, setPreviewOpen] = useState(false);
   const [openModalAddVariationOption, setOpenModalAddVariationOption] =
     useState(false);
   const [variationSelected, setVariationSelected] = useState<VariationModel>();
@@ -140,6 +138,7 @@ const AddProduct = () => {
           thumbnail: item?.thumbnail || "",
           discountedPrice: item?.discountedPrice,
           SKU: item?.SKU,
+          cost: item?.cost,
         });
       }
 
@@ -276,32 +275,6 @@ const AddProduct = () => {
     setAlbumProduct(newFileList);
   };
 
-  const handlePreviewImage = async (file: UploadFile) => {
-    if (!file.url && !file.preview) {
-      if (file.originFileObj) {
-        file.preview = URL.createObjectURL(file.originFileObj);
-      }
-    }
-    setPreviewImage(file.url || (file.preview as string));
-    setPreviewOpen(true);
-  };
-
-  const renderButtonUpload = () => {
-    return (
-      <div className="flex flex-col items-center text-gray-400">
-        <FaPlus size={20} />
-        <p>Upload</p>
-      </div>
-    );
-  };
-
-  const customRequest = (option: any) => {
-    if (option.onSuccess) {
-      option.onSuccess(option.file);
-    }
-    return option.file;
-  };
-
   const hideModalCategory = () => {
     setOpenModalAddCategory(false);
   };
@@ -331,7 +304,7 @@ const AddProduct = () => {
           <div className="w-full h-full flex gap-5">
             <div className="w-3/5">
               <Form.Item label="Title" name={"title"} rules={rules}>
-                <Input allowClear placeholder="Enter title" />
+                <Input allowClear placeholder="Enter title" name="title" />
               </Form.Item>
 
               <Form.Item label="Type of product">
@@ -352,6 +325,28 @@ const AddProduct = () => {
                   }}
                 />
               </Form.Item>
+
+              {productType === "simple" && (
+                <div className="flex gap-2">
+                  <Form.Item label="Cost" name={"cost"} className="w-full">
+                    <Input
+                      placeholder="Enter Cost"
+                      style={{ width: "100%" }}
+                      name="cost"
+                    />
+                  </Form.Item>
+
+                  <Form.Item label="Stock" name={"stock"} className="w-full">
+                    <InputNumber
+                      type="number"
+                      placeholder="Enter stock"
+                      style={{ width: "100%" }}
+                      name="stock"
+                    />
+                  </Form.Item>
+                </div>
+              )}
+
               {productType === "simple" && (
                 <div className="flex gap-2">
                   <Form.Item label="Price" name={"price"} className="w-full">
@@ -361,6 +356,7 @@ const AddProduct = () => {
                       style={{
                         width: "100%",
                       }}
+                      name="price"
                     />
                   </Form.Item>
 
@@ -378,19 +374,14 @@ const AddProduct = () => {
                 </div>
               )}
 
-              <div className="flex gap-2">
+              <div className="flex">
                 <Form.Item label="SKU" name={"SKU"} className="w-full">
-                  <Input placeholder="Enter SKU" style={{ width: "100%" }} />
+                  <Input
+                    placeholder="Enter SKU"
+                    style={{ width: "100%" }}
+                    name="SKU"
+                  />
                 </Form.Item>
-                {productType === "simple" && (
-                  <Form.Item label="Stock" name={"stock"} className="w-full">
-                    <InputNumber
-                      type="number"
-                      placeholder="Enter stock"
-                      style={{ width: "100%" }}
-                    />
-                  </Form.Item>
-                )}
               </div>
 
               <Form.Item label="Short Description" name={"shortDescription"}>
@@ -398,6 +389,7 @@ const AddProduct = () => {
                   rows={3}
                   allowClear
                   placeholder="write something..."
+                  name="shortDescription"
                 />
               </Form.Item>
               <Editor
@@ -508,30 +500,21 @@ const AddProduct = () => {
               </Card>
               <Card title="Thumbail" size="small">
                 <UploadImage
-                  file={thumbnail}
+                  file={thumbnail ? URL.createObjectURL(thumbnail) : undefined}
                   onDelete={() => setThumbnail(undefined)}
                   onChange={(e) => {
                     if (e.target.files) {
                       setThumbnail(e.target.files[0]);
                     }
                   }}
-                  local
                 />
               </Card>
 
               <Card title="Ablum" size="small">
-                <UploadImage
-                  fileList={albumProduct}
+                <UploadImagePreview
                   multiple
-                  onAfterChangePreview={(visible) =>
-                    !visible && setPreviewImage("")
-                  }
-                  onChangePreview={(visible) => setPreviewOpen(visible)}
-                  previewOpen={previewOpen}
-                  previewFile={previewImage}
-                  onPreview={handlePreviewImage}
+                  fileList={albumProduct}
                   onChange={handleChangeImage}
-                  title="Upload"
                 />
               </Card>
             </div>
@@ -770,7 +753,7 @@ const AddProduct = () => {
                               <div>
                                 <Card style={{ borderRadius: 0 }}>
                                   <div className="flex justify-between items-center">
-                                    <Upload
+                                    {/* <Upload
                                       maxCount={1}
                                       listType="picture-card"
                                       onChange={(props) => {
@@ -790,8 +773,25 @@ const AddProduct = () => {
                                       onPreview={() => {}}
                                     >
                                       {renderButtonUpload()}
-                                    </Upload>
-                                    <div className="w-1/2 flex flex-col gap-2">
+                                    </Upload> */}
+                                    <UploadImagePreview
+                                      maxCount={1}
+                                      multiple
+                                      onChange={(props) => {
+                                        const { fileList } = props;
+
+                                        const items = [...subProducts];
+                                        const idx = items.findIndex(
+                                          (el) => el.key_combi === key_combi
+                                        );
+                                        if (idx !== -1) {
+                                          items[idx].thumbnail =
+                                            fileList[0]?.originFileObj || "";
+                                          setSubProducts(items);
+                                        }
+                                      }}
+                                    />
+                                    <div className="w-3/5 flex flex-col gap-2">
                                       <div className="w-full">
                                         <label className="text-sm">SKU: </label>
                                         <Input
@@ -812,27 +812,53 @@ const AddProduct = () => {
                                           }}
                                         />
                                       </div>
-                                      <div className="w-full">
-                                        <label className="text-sm">
-                                          Stock:{" "}
-                                        </label>
-                                        <Input
-                                          size="middle"
-                                          value={it?.stock}
-                                          placeholder="Enter stock"
-                                          name="stock"
-                                          onChange={(e) => {
-                                            const { value } = e.target;
-                                            const items = [...subProducts];
-                                            const idx = items.findIndex(
-                                              (el) => el.key_combi === key_combi
-                                            );
-                                            if (idx !== -1) {
-                                              items[idx]["stock"] = value;
-                                              setSubProducts(items);
-                                            }
-                                          }}
-                                        />
+                                      <div className="w-full flex items-center gap-3">
+                                        <div className="flex flex-col gap-0 w-full">
+                                          <label className="text-sm">
+                                            Stock:{" "}
+                                          </label>
+                                          <Input
+                                            size="middle"
+                                            value={it?.stock}
+                                            placeholder="Enter stock"
+                                            name="stock"
+                                            onChange={(e) => {
+                                              const { value } = e.target;
+                                              const items = [...subProducts];
+                                              const idx = items.findIndex(
+                                                (el) =>
+                                                  el.key_combi === key_combi
+                                              );
+                                              if (idx !== -1) {
+                                                items[idx]["stock"] = value;
+                                                setSubProducts(items);
+                                              }
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="flex flex-col gap-0 w-full">
+                                          <label className="text-sm">
+                                            Cost:{" "}
+                                          </label>
+                                          <Input
+                                            size="middle"
+                                            value={it?.cost}
+                                            placeholder="Enter cost"
+                                            name="cost"
+                                            onChange={(e) => {
+                                              const { value } = e.target;
+                                              const items = [...subProducts];
+                                              const idx = items.findIndex(
+                                                (el) =>
+                                                  el.key_combi === key_combi
+                                              );
+                                              if (idx !== -1) {
+                                                items[idx]["cost"] = value;
+                                                setSubProducts(items);
+                                              }
+                                            }}
+                                          />
+                                        </div>
                                       </div>
                                     </div>
                                   </div>

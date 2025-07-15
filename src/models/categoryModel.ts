@@ -8,4 +8,5 @@ export interface CategoryModel {
   slug: string;
   __v: number;
   parent_id: string;
+  thumbnail?: string;
 }

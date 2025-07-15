@@ -1,13 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Button, Flex, Form, Input, TreeSelect } from "antd";
+import {
+  Button,
+  Flex,
+  Form,
+  Input,
+  TreeSelect,
+  type UploadFile,
+  type UploadProps,
+} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import type { CategoryModel } from "../models/categoryModel";
 import { replaceName } from "../helpers/replaceName";
 import { useEffect, useState } from "react";
-import { handleAPI } from "../apis/request";
+import { handleAPI, uploadImage } from "../apis/request";
 import type { MessageInstance } from "antd/es/message/interface";
 import { rules } from "../helpers/rulesGeneral";
 import type { TreeSelectModel } from "../models/formModel";
+import UploadImagePreview from "./UploadImagePreview";
 
 interface Props {
   categories?: TreeSelectModel[];
@@ -26,6 +35,7 @@ const AddCategory = (props: Props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<TreeSelectModel[]>([]);
   const [form] = Form.useForm();
+  const [files, setFiles] = useState<UploadFile[]>();
 
   useEffect(() => {
     if (categories && categories.length > 0) {
@@ -43,6 +53,17 @@ const AddCategory = (props: Props) => {
       findSelfCat(data, select._id);
       setData(arr);
       form.setFieldsValue(select);
+
+      if (select.thumbnail) {
+        const file: any = {
+          uid: select?.thumbnail || Date.now(),
+          name: select?.thumbnail || Date.now(),
+          url: select.thumbnail,
+        };
+        setFiles([file]);
+      } else if (files && files.length > 0) {
+        setFiles([]);
+      }
     }
   }, [select]);
 
@@ -58,6 +79,7 @@ const AddCategory = (props: Props) => {
   };
 
   const handleFinish = async (values: any) => {
+    setIsLoading(true);
     const data: any = {};
 
     for (const key in values) {
@@ -65,9 +87,19 @@ const AddCategory = (props: Props) => {
     }
     data.slug = replaceName(data.title || "");
 
+    if (files && files.length > 0) {
+      const file = files[0];
+
+      if (typeof file !== "string") {
+        const responseUrl = await uploadImage("thumbnail", file.originFileObj);
+        data.thumbnail = responseUrl.data;
+      }
+    } else if (select) {
+      data.thumbnail = "";
+    }
+
     const api = `/categories/${select ? `edit/${select._id}` : "create"}`;
     try {
-      setIsLoading(true);
       const response: any = await handleAPI(
         api,
         data,
@@ -83,6 +115,7 @@ const AddCategory = (props: Props) => {
         } else {
           form.resetFields();
           onAddNew(response?.data);
+          setFiles([]);
         }
       } else {
         if (onFetch) {
@@ -100,9 +133,24 @@ const AddCategory = (props: Props) => {
     }
   };
 
+  const handleChangeImage: UploadProps["onChange"] = ({
+    fileList: newFileList,
+  }) => {
+    setFiles(newFileList);
+  };
+
   return (
     <>
       <Form form={form} onFinish={handleFinish} layout="vertical" size="large">
+        <div className="my-4">
+          <UploadImagePreview
+            fileList={files}
+            multiple
+            maxCount={1}
+            onChange={handleChangeImage}
+          />
+        </div>
+
         <Form.Item name={"parent_id"} label="Parent Category">
           <TreeSelect
             treeData={data}
@@ -114,7 +162,7 @@ const AddCategory = (props: Props) => {
           />
         </Form.Item>
         <Form.Item name={"title"} label="Title" rules={rules}>
-          <Input placeholder="Enter Title" />
+          <Input placeholder="Enter Title" name="title" />
         </Form.Item>
         <Form.Item name={"description"} label="Description" rules={[]}>
           <TextArea placeholder="Write something..." rows={3} />
@@ -124,6 +172,9 @@ const AddCategory = (props: Props) => {
         <Button
           onClick={() => {
             form.resetFields();
+            if (files && files.length > 0) {
+              setFiles([]);
+            }
             if (onCancel) onCancel();
           }}
         >

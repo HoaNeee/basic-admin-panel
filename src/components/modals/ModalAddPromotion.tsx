@@ -3,11 +3,9 @@ import {
   DatePicker,
   Flex,
   Form,
-  Image,
   Input,
   Modal,
   Select,
-  Upload,
   type UploadFile,
   type UploadProps,
 } from "antd";
@@ -15,11 +13,11 @@ import TextArea from "antd/es/input/TextArea";
 
 import type { MessageInstance } from "antd/es/message/interface";
 import { rules } from "../../helpers/rulesGeneral";
-import { FaPlus } from "react-icons/fa6";
 import { useEffect, useState } from "react";
 import { handleAPI, uploadImage } from "../../apis/request";
 import type { PromotionModel } from "../../models/promotionModel";
 import dayjs from "dayjs";
+import UploadImagePreview from "../UploadImagePreview";
 
 interface Props {
   isOpen: boolean;
@@ -31,11 +29,8 @@ interface Props {
 
 const ModalAddPromotion = (props: Props) => {
   const { isOpen, onClose, mesApi, onFetch, promotion } = props;
-  const [previewFile, setPreviewFile] = useState<any>();
-  const [previewOpen, setPreviewOpen] = useState<boolean>(false);
   const [files, setFiles] = useState<UploadFile[]>();
   const [isLoading, setIsLoading] = useState(false);
-
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -114,32 +109,6 @@ const ModalAddPromotion = (props: Props) => {
     }
   };
 
-  const customRequest = (option: any) => {
-    if (option.onSuccess) {
-      option.onSuccess(option.file);
-    }
-    return option.file;
-  };
-
-  const renderButtonUpload = () => {
-    return (
-      <div className="flex flex-col items-center text-gray-400">
-        {<FaPlus size={20} />}
-        <p>Upload</p>
-      </div>
-    );
-  };
-
-  const handlePreviewImage = async (file: UploadFile) => {
-    if (!file.url && !file.preview) {
-      if (file.originFileObj) {
-        file.preview = URL.createObjectURL(file.originFileObj);
-      }
-    }
-    setPreviewFile(file.url || (file.preview as string));
-    setPreviewOpen(true);
-  };
-
   const handleChangeImage: UploadProps["onChange"] = ({
     fileList: newFileList,
   }) => {
@@ -167,33 +136,12 @@ const ModalAddPromotion = (props: Props) => {
         size="large"
       >
         <div className="my-2">
-          <Upload
-            listType="picture-card"
-            fileList={files}
-            action={() => {
-              return Promise.resolve("");
-            }}
-            onChange={handleChangeImage}
-            customRequest={customRequest}
-            onPreview={handlePreviewImage}
+          <UploadImagePreview
+            multiple
             maxCount={1}
-          >
-            {renderButtonUpload()}
-          </Upload>
-
-          {previewFile && (
-            <Image
-              wrapperStyle={{ display: "none" }}
-              preview={{
-                visible: previewOpen,
-                onVisibleChange: (visible) => setPreviewOpen(visible),
-                afterOpenChange: (open) => {
-                  if (!open) setPreviewOpen(false);
-                },
-              }}
-              src={previewFile}
-            />
-          )}
+            fileList={files}
+            onChange={handleChangeImage}
+          />
         </div>
         <Form.Item label="Title" name={"title"} rules={rules}>
           <Input placeholder="Enter title" />

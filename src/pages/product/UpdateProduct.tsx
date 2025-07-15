@@ -5,7 +5,6 @@ import {
   Collapse,
   Divider,
   Form,
-  Image,
   InputNumber,
   message,
   Popconfirm,
@@ -13,8 +12,6 @@ import {
   Space,
   theme,
   TreeSelect,
-  Upload,
-  type UploadFile,
   type UploadProps,
 } from "antd";
 import Loading from "../../components/Loading";
@@ -40,8 +37,9 @@ import { BiSolidPlusSquare } from "react-icons/bi";
 import { useNavigate, useParams } from "react-router";
 import type { ProductModel, SubProductModel } from "../../models/productModel";
 import { genCombinations } from "../../helpers/genCombinations";
-import { RiCloseFill } from "react-icons/ri";
 import ModalVariationOption from "../../components/modals/ModalVariationOption";
+import UploadImagePreview from "../../components/UploadImagePreview";
+import UploadImage from "../../components/UploadImage";
 
 interface SelectEdit extends SelectModel {
   sub_product_id?: string;
@@ -73,8 +71,6 @@ const UpdateProduct = () => {
   const [productDetail, setProductDetail] = useState<ProductModel>();
   const [thumbnail, setThumbnail] = useState<any>();
   const [albumProduct, setAlbumProduct] = useState<any[]>();
-  const [previewImage, setPreviewImage] = useState<any>();
-  const [previewOpen, setPreviewOpen] = useState(false);
   const [oldThumbnail, setOldThumbnail] = useState<any>();
   const [openModalAddVariationOption, setOpenModalAddVariationOption] =
     useState(false);
@@ -309,6 +305,7 @@ const UpdateProduct = () => {
         discountedPrice: item?.discountedPrice,
         thumbnail: item?.thumbnail || "",
         SKU: item?.SKU,
+        cost: item?.cost,
       };
     });
 
@@ -391,31 +388,6 @@ const UpdateProduct = () => {
     setAlbumProduct(newFileList);
   };
 
-  const handlePreviewImage = async (file: UploadFile) => {
-    if (!file.url && !file.preview) {
-      if (file.originFileObj) {
-        file.preview = URL.createObjectURL(file.originFileObj);
-      }
-    }
-    setPreviewImage(file.url || (file.preview as string));
-    setPreviewOpen(true);
-  };
-
-  const renderButtonUpload = () => {
-    return (
-      <div className="flex flex-col items-center text-gray-400">
-        <FaPlus size={20} />
-        <p>Upload</p>
-      </div>
-    );
-  };
-
-  const customRequest = (option: any) => {
-    if (option.onSuccess) {
-      option.onSuccess(option.file);
-    }
-    return option.file;
-  };
   const hideModalVariationOption = () => {
     setOpenModalAddVariationOption(false);
     setVariationSelected(undefined);
@@ -433,6 +405,32 @@ const UpdateProduct = () => {
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const renderThumbnail = () => {
+    return (
+      <UploadImage
+        file={
+          (thumbnail || oldThumbnail) && thumbnail
+            ? URL.createObjectURL(thumbnail)
+            : oldThumbnail
+            ? oldThumbnail
+            : undefined
+        }
+        onChange={(e) => {
+          if (e.target.files) {
+            setThumbnail(e.target.files[0]);
+          }
+        }}
+        onDelete={() => {
+          if (oldThumbnail) {
+            setOldThumbnail(undefined);
+          } else if (thumbnail) {
+            setThumbnail(undefined);
+          }
+        }}
+      />
+    );
   };
 
   return (
@@ -476,6 +474,22 @@ const UpdateProduct = () => {
                   }}
                 />
               </Form.Item>
+
+              {productType === "simple" && (
+                <div className="flex gap-2">
+                  <Form.Item label="Cost" name={"cost"} className="w-full">
+                    <Input placeholder="Enter Cost" style={{ width: "100%" }} />
+                  </Form.Item>
+
+                  <Form.Item label="Stock" name={"stock"} className="w-full">
+                    <InputNumber
+                      type="number"
+                      placeholder="Enter stock"
+                      style={{ width: "100%" }}
+                    />
+                  </Form.Item>
+                </div>
+              )}
               {productType === "simple" && (
                 <div className="flex gap-2">
                   {
@@ -507,15 +521,6 @@ const UpdateProduct = () => {
                 <Form.Item label="SKU" name={"SKU"} className="w-full">
                   <Input placeholder="Enter SKU" style={{ width: "100%" }} />
                 </Form.Item>
-                {productType === "simple" && (
-                  <Form.Item label="Stock" name={"stock"} className="w-full">
-                    <InputNumber
-                      type="number"
-                      placeholder="Enter stock"
-                      style={{ width: "100%" }}
-                    />
-                  </Form.Item>
-                )}
               </div>
 
               <Form.Item label="Short Description" name={"shortDescription"}>
@@ -636,103 +641,14 @@ const UpdateProduct = () => {
                 </Form.Item>
               </Card>
               <Card title="Thumbail" size="small">
-                {thumbnail ? (
-                  <div className="text-center my-2">
-                    <div className="w-66 h-50 mx-auto relative">
-                      <Image
-                        src={URL.createObjectURL(thumbnail)}
-                        width={"100%"}
-                        height={"100%"}
-                        style={{
-                          objectFit: "cover",
-                        }}
-                        className="relative block"
-                      ></Image>
-                      <div
-                        className="absolute -top-2 -right-2 cursor-pointer z-10 bg-gray-500 rounded-full "
-                        onClick={() => {
-                          setThumbnail(undefined);
-                        }}
-                      >
-                        <RiCloseFill size={25} color="#fff" />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  oldThumbnail && (
-                    <div className="text-center my-2">
-                      <div className="w-66 h-50 mx-auto relative">
-                        <Image
-                          src={oldThumbnail}
-                          width={"100%"}
-                          height={"100%"}
-                          style={{
-                            objectFit: "cover",
-                          }}
-                          className="relative block"
-                        ></Image>
-                        <div
-                          className="absolute -top-2 -right-2 cursor-pointer z-10 bg-gray-500 rounded-full "
-                          onClick={() => {
-                            setOldThumbnail(undefined);
-                          }}
-                        >
-                          <RiCloseFill size={25} color="#fff" />
-                        </div>
-                      </div>
-                    </div>
-                  )
-                )}
-                {!thumbnail && !oldThumbnail && (
-                  <div>
-                    <Button type="link" size="small">
-                      <label htmlFor="thumbnail">
-                        Choose thumbnail for product
-                      </label>
-                    </Button>
-
-                    <div className="hidden">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        id="thumbnail"
-                        onChange={(e) => {
-                          if (e.target.files) {
-                            setThumbnail(e.target.files[0]);
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
+                {renderThumbnail()}
               </Card>
               <Card title="Ablum" size="small">
-                <Upload
-                  listType="picture-card"
+                <UploadImagePreview
                   fileList={albumProduct}
-                  action={() => {
-                    return Promise.resolve("");
-                  }}
-                  onChange={handleChangeImage}
-                  customRequest={customRequest}
-                  onPreview={handlePreviewImage}
                   multiple
-                >
-                  {renderButtonUpload()}
-                </Upload>
-
-                {previewImage && (
-                  <Image
-                    wrapperStyle={{ display: "none" }}
-                    preview={{
-                      visible: previewOpen,
-                      onVisibleChange: (visible) => setPreviewOpen(visible),
-                      afterOpenChange: (visible) =>
-                        !visible && setPreviewImage(""),
-                    }}
-                    src={previewImage}
-                  />
-                )}
+                  onChange={handleChangeImage}
+                />
               </Card>
             </div>
           </div>
@@ -964,12 +880,7 @@ const UpdateProduct = () => {
                               <div>
                                 <Card style={{ borderRadius: 0 }}>
                                   <div className="flex items-center justify-between">
-                                    <Upload
-                                      maxCount={1}
-                                      defaultFileList={
-                                        file ? [file] : undefined
-                                      }
-                                      listType="picture-card"
+                                    <UploadImagePreview
                                       onChange={(props) => {
                                         const { fileList } = props;
                                         const items = [...subProducts];
@@ -982,13 +893,15 @@ const UpdateProduct = () => {
                                           setSubProducts(items);
                                         }
                                       }}
-                                      customRequest={customRequest}
-                                      onPreview={() => {}}
-                                    >
-                                      {renderButtonUpload()}
-                                    </Upload>
-                                    <div className="w-1/2 flex flex-col gap-2">
-                                      <div className="w-full">
+                                      maxCount={1}
+                                      multiple
+                                      defaultFileList={
+                                        file ? [file] : undefined
+                                      }
+                                    />
+
+                                    <div className="w-3/5 flex flex-col gap-2">
+                                      <div className="w-full flex flex-col gap-1">
                                         <label className="text-sm">SKU: </label>
                                         <Input
                                           size="middle"
@@ -1008,27 +921,53 @@ const UpdateProduct = () => {
                                           }}
                                         />
                                       </div>
-                                      <div className="w-full">
-                                        <label className="text-sm">
-                                          Stock:{" "}
-                                        </label>
-                                        <Input
-                                          size="middle"
-                                          value={it?.stock}
-                                          placeholder="Enter stock"
-                                          name="stock"
-                                          onChange={(e) => {
-                                            const { value } = e.target;
-                                            const items = [...subProducts];
-                                            const idx = items.findIndex(
-                                              (el) => el.key_combi === key_combi
-                                            );
-                                            if (idx !== -1) {
-                                              items[idx]["stock"] = value;
-                                              setSubProducts(items);
-                                            }
-                                          }}
-                                        />
+                                      <div className="w-full flex items-center gap-3">
+                                        <div className="flex flex-col w-full gap-1">
+                                          <label className="text-sm">
+                                            Stock:{" "}
+                                          </label>
+                                          <Input
+                                            size="middle"
+                                            value={it?.stock}
+                                            placeholder="Enter stock"
+                                            name="stock"
+                                            onChange={(e) => {
+                                              const { value } = e.target;
+                                              const items = [...subProducts];
+                                              const idx = items.findIndex(
+                                                (el) =>
+                                                  el.key_combi === key_combi
+                                              );
+                                              if (idx !== -1) {
+                                                items[idx]["stock"] = value;
+                                                setSubProducts(items);
+                                              }
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="flex flex-col w-full">
+                                          <label className="text-sm">
+                                            Cost:{" "}
+                                          </label>
+                                          <Input
+                                            size="middle"
+                                            value={it?.cost}
+                                            placeholder="Enter Cost"
+                                            name="cost"
+                                            onChange={(e) => {
+                                              const { value } = e.target;
+                                              const items = [...subProducts];
+                                              const idx = items.findIndex(
+                                                (el) =>
+                                                  el.key_combi === key_combi
+                                              );
+                                              if (idx !== -1) {
+                                                items[idx]["cost"] = value;
+                                                setSubProducts(items);
+                                              }
+                                            }}
+                                          />
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
