@@ -142,7 +142,9 @@ const Orders = () => {
       dataIndex: "products",
       render: (val: POProduct[]) => {
         return (
-          <p>{val.reduce((val: number, item) => val + item.quantity, 0)}</p>
+          <p>
+            {val.reduce((val: number, item) => val + item.quantity, 0)} Packets
+          </p>
         );
       },
     },
