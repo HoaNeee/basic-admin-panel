@@ -2,22 +2,12 @@ import { useEffect, useState } from "react";
 import { handleAPI } from "../../apis/request";
 import { Button, Card, List, Table } from "antd";
 import { VND } from "../../helpers/formatCurrency";
-import type { ProductModel } from "../../models/productModel";
+import type { ITopSell, ProductModel } from "../../models/productModel";
 import IMAGENOTFOUND from "../../assets/imagenotfound.png";
 import { Link } from "react-router";
 
-export interface ITopSell {
-  quantity: number;
-  price: number;
-  SKU: string;
-  options: string[];
-  title: string;
-  remaining: number;
-  product_id: string;
-}
-
 interface IProduct extends ProductModel {
-  thumbnailProduct?: string;
+  thumbnail_product?: string;
   product_id: string;
   options_info: {
     title: string;
@@ -48,7 +38,6 @@ const TopSellAndLowStock = () => {
   const getTopSell = async () => {
     const api = `/products/top-sell?page=1&limit=3`;
     const response = await handleAPI(api);
-    console.log(response);
     setDataTopSell(response.data.products);
   };
 
@@ -100,7 +89,7 @@ const TopSellAndLowStock = () => {
               {
                 key: "sold",
                 title: <p className="text-gray-500">Sold Quantity</p>,
-                dataIndex: "quantity",
+                dataIndex: "soldQuantity",
               },
               {
                 key: "remaining",
@@ -110,7 +99,7 @@ const TopSellAndLowStock = () => {
               {
                 key: "price",
                 title: <p className="text-gray-500">Price</p>,
-                dataIndex: "price",
+                dataIndex: "orderedPrice",
                 render(val) {
                   return <p>{VND.format(val)}</p>;
                 },
@@ -137,14 +126,10 @@ const TopSellAndLowStock = () => {
               return (
                 <List.Item className="w-full">
                   <div className="flex items-center gap-4 w-full">
-                    <div className="w-15 h-15 bg-[#f1f2f1] rounded-md">
-                      {item.thumbnail || item.thumbnailProduct ? (
+                    <div className="w-15 h-15 bg-[#f1f2f1] rounded-md overflow-hidden">
+                      {item.thumbnail || item.thumbnail_product ? (
                         <img
-                          src={
-                            item.product_id
-                              ? item.thumbnailProduct
-                              : item.thumbnail
-                          }
+                          src={item.thumbnail || item.thumbnail_product}
                           alt={item.title}
                           className="w-full h-full"
                         />

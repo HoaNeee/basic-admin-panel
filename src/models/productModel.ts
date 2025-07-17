@@ -1,4 +1,5 @@
 import type { RcFile } from "antd/es/upload";
+import type { CategoryModel } from "./categoryModel";
 
 export interface ProductModel {
   _id: string;
@@ -41,4 +42,15 @@ export interface SubProductModel {
 export interface SubProductOptionModel {
   sub_product_id: string;
   variation_option_id: string;
+}
+
+export interface ITopSell extends ProductModel {
+  soldQuantity: number;
+  orderedPrice: number;
+  SKU: string;
+  options: string[];
+  title: string;
+  remaining: number;
+  product_id: string;
+  categories_info: CategoryModel[];
 }

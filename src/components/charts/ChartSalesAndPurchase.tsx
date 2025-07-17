@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 export interface IChart {
   name: string;
   label: string;
-  value: string;
+  value: number;
 }
 
 const ChartSalesAndPurchase = () => {

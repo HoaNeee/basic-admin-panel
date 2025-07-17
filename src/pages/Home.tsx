@@ -11,12 +11,12 @@ import { handleAPI } from "../apis/request";
 import { VND } from "../helpers/formatCurrency";
 import { FiShoppingBag } from "react-icons/fi";
 import { SlBag } from "react-icons/sl";
-import { LiaUserCircleSolid } from "react-icons/lia";
+import { LiaCoinsSolid, LiaUserCircleSolid } from "react-icons/lia";
 import { RiFileListLine } from "react-icons/ri";
 import type { PurchaseOrderModel } from "../models/puchaseOrder";
 import type { Supplier } from "../models/supplier";
-import ChartSalesAndPurchase from "../components/home/ChartSalesAndPurchase";
-import ChartOrder from "../components/home/ChartOrder";
+import ChartSalesAndPurchase from "../components/charts/ChartSalesAndPurchase";
+import ChartOrder from "../components/charts/ChartOrder";
 import TopSellAndLowStock from "../components/home/TopSellAndLowStock";
 
 const Home = () => {
@@ -88,6 +88,7 @@ const Home = () => {
             <StatisticComponent
               className="border-gray-100 border-r-2 lg:px-6 px-0"
               label="Sales"
+              icon={<LiaCoinsSolid size={33} className="text-blue-500" />}
               value={String(statisticOrder?.sales)}
             />
             <StatisticComponent

@@ -34,7 +34,6 @@ const StatisticPurchaseOrder = () => {
       setIsLoading(true);
       const api = `/purchase-orders/statistic?from=${dateSelected.from}&to=${dateSelected.to}`;
       const response = await handleAPI(api);
-      console.log(response);
       setDataStatistic(response.data);
     } catch (error) {
       console.log(error);

@@ -1,7 +1,7 @@
 import { Menu, type MenuProps } from "antd";
 import Sider from "antd/es/layout/Sider";
 import { Link, useLocation } from "react-router";
-import { RiHome5Line } from "react-icons/ri";
+import { RiBillLine, RiHome5Line } from "react-icons/ri";
 import { MdOutlineInventory2 } from "react-icons/md";
 import { MdOutlineInsertChart } from "react-icons/md";
 import { LuCircleUserRound } from "react-icons/lu";
@@ -25,17 +25,9 @@ const items: MenuProps["items"] = [
 
   {
     key: "inventories",
-    label: (
-      <>
-        <p className="font-medium">Inventories</p>
-      </>
-    ),
+    label: <p className="font-medium">Inventories</p>,
     icon: <MdOutlineInventory2 size={20} />,
-
     children: [
-      {
-        type: "divider",
-      },
       {
         key: "/inventories",
         label: (
@@ -47,22 +39,18 @@ const items: MenuProps["items"] = [
       {
         key: "/inventories/add-new-product",
         label: (
-          <>
-            <Link to={"inventories/add-new-product"} className="font-medium">
-              Add product
-            </Link>
-          </>
+          <Link to={"inventories/add-new-product"} className="font-medium">
+            Add product
+          </Link>
         ),
         type: "item",
       },
       {
         key: "/inventories/variations",
         label: (
-          <>
-            <Link to={"inventories/variations"} className="font-medium">
-              Variations
-            </Link>
-          </>
+          <Link to={"inventories/variations"} className="font-medium">
+            Variations
+          </Link>
         ),
         type: "item",
       },
@@ -102,7 +90,7 @@ const items: MenuProps["items"] = [
     icon: <BsBoxSeam size={20} />,
     children: [
       {
-        key: "/order",
+        key: "/orders",
         label: (
           <Link to={"/orders"} className="font-medium">
             All
@@ -110,7 +98,7 @@ const items: MenuProps["items"] = [
         ),
       },
       {
-        key: "/add-purchase-order",
+        key: "/orders/add-purchase-order",
         label: (
           <Link to={"/orders/add-purchase-order"} className="font-medium">
             New Order
@@ -118,6 +106,15 @@ const items: MenuProps["items"] = [
         ),
       },
     ],
+  },
+  {
+    key: "/sale-orders",
+    label: (
+      <Link to={"/sale-orders"} className="font-medium">
+        Sale Orders
+      </Link>
+    ),
+    icon: <RiBillLine size={20} />,
   },
   {
     key: "/manage-store",
@@ -142,6 +139,12 @@ const items: MenuProps["items"] = [
 const SiderComponent = () => {
   const location = useLocation();
 
+  const pathName = location.pathname;
+
+  const keyOpen =
+    pathName.substring(1).substring(0, pathName.substring(1).indexOf("/")) ||
+    pathName.substring(1);
+
   return (
     <Sider
       theme="light"
@@ -165,8 +168,8 @@ const SiderComponent = () => {
       <Menu
         items={items}
         mode="inline"
-        defaultSelectedKeys={[location.pathname]}
-        defaultOpenKeys={["/inventories"]}
+        defaultSelectedKeys={[pathName]}
+        defaultOpenKeys={[keyOpen]}
       />
     </Sider>
   );
