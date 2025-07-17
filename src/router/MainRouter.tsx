@@ -4,7 +4,7 @@ import Home from "../pages/Home";
 import Inventory from "../pages/Inventory";
 import Reports from "../pages/Reports";
 import Suppliers from "../pages/Suppliers";
-import Orders from "../pages/Orders";
+import Orders from "../pages/PurchaseOrders";
 import ManageStore from "../pages/ManageStore";
 import AddProduct from "../pages/product/AddProduct";
 import Category from "../pages/Category";

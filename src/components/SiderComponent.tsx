@@ -85,6 +85,15 @@ const items: MenuProps["items"] = [
     icon: <LuCircleUserRound size={20} />,
   },
   {
+    key: "/sale-orders",
+    label: (
+      <Link to={"/sale-orders"} className="font-medium">
+        Sale Orders
+      </Link>
+    ),
+    icon: <RiBillLine size={20} />,
+  },
+  {
     key: "orders",
     label: <p className="font-medium">Orders</p>,
     icon: <BsBoxSeam size={20} />,
@@ -107,15 +116,7 @@ const items: MenuProps["items"] = [
       },
     ],
   },
-  {
-    key: "/sale-orders",
-    label: (
-      <Link to={"/sale-orders"} className="font-medium">
-        Sale Orders
-      </Link>
-    ),
-    icon: <RiBillLine size={20} />,
-  },
+
   {
     key: "/manage-store",
     label: (
@@ -157,14 +158,14 @@ const SiderComponent = () => {
         bottom: 0,
       }}
     >
-      <div className="flex w-full items-center ml-2 py-2">
+      <Link to={"/"} className="flex w-full items-center ml-2 py-2">
         <div className="w-[52px] h-[52px]">
           <img src={Logo} alt="" />
         </div>
         <p className="text-primary font-bold text-lg">
           {appName.appConstantname}
         </p>
-      </div>
+      </Link>
       <Menu
         items={items}
         mode="inline"

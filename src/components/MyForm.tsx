@@ -29,15 +29,22 @@ const MyForm = (props: Props) => {
 
       case "select":
         return (
-          <Select options={item.look_items} placeholder={item.placeholder} />
+          <Select
+            options={item.look_items}
+            placeholder={"Updating..."}
+            disabled={item.key === "product" || item.key === "category"}
+          />
         );
 
       default:
         return (
           <Input
             type={item.typeInput || "text"}
-            placeholder={item.placeholder}
+            placeholder={
+              item.key === "product" ? "Updating..." : item.placeholder
+            }
             name={item.key}
+            disabled={item.key === "product" || item.key === "category"}
           />
         );
     }
