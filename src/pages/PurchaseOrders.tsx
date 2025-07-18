@@ -246,7 +246,7 @@ const Orders = () => {
             <Button icon={<IoFilterOutline size={16} />}>Filters</Button>
             <Divider type="vertical" />
             <Button type="primary">
-              <Link to={"/orders/add-purchase-order"}> New Order</Link>
+              <Link to={"/purchase-orders/add-purchase-order"}> New Order</Link>
             </Button>
             <Button>Order history</Button>
           </Space>

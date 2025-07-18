@@ -89,7 +89,7 @@ const Home = () => {
               className="border-gray-100 border-r-2 lg:px-6 px-0"
               label="Sales"
               icon={<LiaCoinsSolid size={33} className="text-blue-500" />}
-              value={String(statisticOrder?.sales)}
+              value={String(statisticOrder?.sales || 0)}
             />
             <StatisticComponent
               className="border-r-2 border-gray-100 lg:px-6 px-0"
@@ -128,7 +128,7 @@ const Home = () => {
               icon={<FiShoppingBag size={33} className="text-orange-300" />}
               cnIcon="bg-orange-100/60"
               type="vertical"
-              value={String(statisticOrder?.quantityInCart)}
+              value={String(statisticOrder?.quantityInCart || 0)}
             />
             <StatisticComponent
               className=""
@@ -136,7 +136,7 @@ const Home = () => {
               icon={<LuMapPinHouse size={33} className="text-purple-500" />}
               cnIcon="bg-purple-100/60"
               type="vertical"
-              value={String(statisticOrder?.delivereds)}
+              value={String(statisticOrder?.delivereds || 0)}
             />
           </div>
         </Card>

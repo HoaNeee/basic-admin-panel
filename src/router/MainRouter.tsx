@@ -14,19 +14,10 @@ import UpdateProduct from "../pages/product/UpdateProduct";
 import Promotions from "../pages/Promotions";
 import AddPurchaseOrder from "../pages/purchase-order/AddPurchaseOrder";
 import SaleOrders from "../pages/SaleOrders";
-
-// const mainRouter = createBrowserRouter([
-//   {
-//     path: "/",
-//     element: <MainLayout />,
-//     children: [
-//       {
-//         index: true,
-//         element: <Home />,
-//       },
-//     ],
-//   },
-// ]);
+import Customers from "../pages/Customers";
+import Reviews from "../pages/Reviews";
+import Setting from "../pages/Setting";
+import Profile from "../pages/Profile";
 
 const MainRouter = () => {
   return (
@@ -47,12 +38,16 @@ const MainRouter = () => {
           <Route element={<Reports />} path="reports" />
           <Route element={<Suppliers />} path="suppliers" />
           <Route element={<SaleOrders />} path="sale-orders" />
-          <Route path="orders">
+          <Route path="purchase-orders">
             <Route index element={<Orders />} />
             <Route path="add-purchase-order" element={<AddPurchaseOrder />} />
           </Route>
           <Route element={<ManageStore />} path="manage-store" />
           <Route element={<Promotions />} path="promotions" />
+          <Route element={<Customers />} path="customers" />
+          <Route element={<Reviews />} path="reviews" />
+          <Route element={<Profile />} path="profile" />
+          <Route element={<Setting />} path="setting" />
         </Route>
       </Routes>
     </BrowserRouter>

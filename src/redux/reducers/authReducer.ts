@@ -3,18 +3,21 @@ import { appName } from "../../constants/appName";
 
 export interface AuthState {
   userId: string;
-  fullname: string;
+  fullName: string;
   role: string;
   accessToken: string;
   refreshToken: string;
+  avatar?: string;
+  email?: string;
 }
 
 const initialState: AuthState = {
   userId: "",
-  fullname: "",
+  fullName: "",
   role: "",
   accessToken: "",
   refreshToken: "",
+  avatar: "",
 };
 
 const authSlice = createSlice({
@@ -39,6 +42,7 @@ const authSlice = createSlice({
         userId: action.payload.id,
         role: action.payload.role,
         email: action.payload.email,
+        fullName: action.payload.fullName,
       });
     },
     removeAuth: (state) => {

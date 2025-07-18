@@ -31,7 +31,7 @@ const StatisticComponent = (props: Props) => {
           type === "vertical" ? "flex-col items-center" : "flex-row"
         }`}
       >
-        <p className="font-semibold">{value || 0}</p>
+        <p className="font-semibold">{value ?? 0}</p>
         <p className={`font-medium text-sm ${cnLabel}`}>{label || ""}</p>
       </div>
     </div>

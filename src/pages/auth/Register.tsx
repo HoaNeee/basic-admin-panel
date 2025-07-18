@@ -58,7 +58,7 @@ const Register = () => {
             onFinish={handleLogin}
             size="large"
           >
-            <Form.Item label="Name" name={"fullname"} rules={[rule("name")]}>
+            <Form.Item label="Name" name={"fullName"} rules={[rule("name")]}>
               <Input allowClear placeholder="Enter your name" />
             </Form.Item>
             <Form.Item label="Email" name={"email"} rules={[rule("email")]}>

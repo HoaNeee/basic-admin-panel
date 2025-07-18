@@ -23,7 +23,7 @@ import { IoFilterOutline } from "react-icons/io5";
 import type { CategoryModel } from "../models/categoryModel";
 import { RiSubtractFill } from "react-icons/ri";
 import { RiDeleteBin5Line } from "react-icons/ri";
-import FilterProduct from "../components/FilterProduct";
+import FilterProduct from "../components/filter/FilterProduct";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import { VND } from "../helpers/formatCurrency";
 

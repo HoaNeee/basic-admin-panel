@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import MainRouter from "./MainRouter";
 import AuthRouter from "./AuthRouter";
 import { useDispatch, useSelector } from "react-redux";

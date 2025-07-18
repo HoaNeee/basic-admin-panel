@@ -154,7 +154,7 @@ const AddPurchaseOrder = () => {
         "post"
       );
       messApi.success(response.message);
-      naviagte("/orders");
+      naviagte("/purchase-orders");
     } catch (error: any) {
       messApi.error(error.message);
     } finally {

@@ -7,7 +7,6 @@ import { useDispatch } from "react-redux";
 import { appName } from "../constants/appName";
 import { removeAuth } from "../redux/reducers/authReducer";
 import { useEffect } from "react";
-import Sider from "antd/es/layout/Sider";
 
 const MainLayout = () => {
   const auth = localStorage.getItem(appName.auth);
@@ -31,6 +30,7 @@ const MainLayout = () => {
       }
     }
   }, [auth]);
+
   return (
     <Layout
       className="w-full relative"
@@ -38,9 +38,8 @@ const MainLayout = () => {
         minHeight: "100vh",
       }}
     >
-      <Sider>
-        <SiderComponent />
-      </Sider>
+      <SiderComponent />
+
       <Layout className="">
         <HeaderComponent />
         <Content className="p-3">

@@ -287,7 +287,8 @@ const AddProduct = () => {
   return (
     <>
       {contextHolderMes}
-      <div className="h-full w-full relative pb-10">
+
+      <div className="h-full w-full relative p-3 pb-8">
         {(isLoading || isCreating) && (
           <>
             <Loading type="screen" />
@@ -431,7 +432,7 @@ const AddProduct = () => {
                 }}
               />
             </div>
-            <div className="flex-1 mt-4 flex flex-col gap-3">
+            <div className="flex-1 mt-4 flex flex-col gap-5">
               <Card size="small">
                 <Space>
                   <Button size="middle" onClick={() => navigate(-1)}>

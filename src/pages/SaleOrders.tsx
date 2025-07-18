@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Button,
+  DatePicker,
   Divider,
   Dropdown,
   Flex,
   Input,
   message,
   Modal,
+  Select,
   Space,
   Table,
   Tag,
@@ -19,6 +21,7 @@ import type { ProductSaleOrder, SaleOrder } from "../models/saleOrder";
 import type { ColumnType } from "antd/es/table";
 import { VND } from "../helpers/formatCurrency";
 import TextArea from "antd/es/input/TextArea";
+import dayjs from "dayjs";
 
 const statusItems: MenuProps["items"] = [
   {
@@ -44,6 +47,18 @@ const statusItems: MenuProps["items"] = [
   },
 ];
 
+interface FilterOrder {
+  status: string;
+  fromDate: string;
+  toDate: string;
+}
+
+const initialFilter: FilterOrder = {
+  status: "",
+  fromDate: "",
+  toDate: "",
+};
+
 const SaleOrders = () => {
   const [saleOrders, setSaleOrders] = useState<SaleOrder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,17 +67,20 @@ const SaleOrders = () => {
   const [totalRecord, setTotalRecord] = useState(10);
   const [openModalReson, setOpenModalReson] = useState(false);
   const [orderSelected, setOrderSelected] = useState<SaleOrder>();
+  const [keyword, setKeyword] = useState("");
+  const [valueFilter, setValueFilter] = useState<FilterOrder>(initialFilter);
+  const [filter, setFilter] = useState<FilterOrder>(initialFilter);
 
   const [messApi, context] = message.useMessage();
 
   useEffect(() => {
     getSaleOrders();
-  }, [page]);
+  }, [page, keyword, filter]);
 
   const getSaleOrders = async () => {
     try {
       setIsLoading(true);
-      const api = `/orders?page=${page}&limit=${limit}`;
+      const api = `/orders?page=${page}&limit=${limit}&keyword=${keyword}&from=${filter.fromDate}&to=${filter.toDate}&status=${filter.status}&sort=createdAt-desc`;
       const response = await handleAPI(api);
       setSaleOrders(response.data.orders);
       setTotalRecord(response.data.totalRecord);
@@ -74,15 +92,6 @@ const SaleOrders = () => {
   };
 
   const columns: ColumnType<SaleOrder>[] = [
-    // {
-    //   key: "sn",
-    //   dataIndex: "_id",
-    //   title: "#",
-    //   render: (_val, _record, index) => {
-    //     return (page - 1) * limit + 1 + index;
-    //   },
-    //   width: 70,
-    // },
     {
       key: "orderno",
       title: "Order No",
@@ -96,6 +105,22 @@ const SaleOrders = () => {
         return (
           <p>
             {value?.firstName || ""} {value?.lastName || ""}
+          </p>
+        );
+      },
+    },
+    {
+      key: "createdAt",
+      title: "Ordere Date",
+      dataIndex: "createdAt",
+      render: (value) => {
+        return (
+          <p>
+            {new Date(value).toLocaleDateString("vi", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "2-digit",
+            })}
           </p>
         );
       },
@@ -235,8 +260,11 @@ const SaleOrders = () => {
           <Space size={5}>
             <Input.Search
               placeholder="Enter username..."
-              onSearch={async (key) => {
-                console.log(key);
+              onSearch={(key) => {
+                if (page !== 1) {
+                  setPage(1);
+                }
+                setKeyword(key);
               }}
               allowClear
             />
@@ -245,7 +273,84 @@ const SaleOrders = () => {
               arrow
               placement="bottom"
               popupRender={() => {
-                return <div>filter</div>;
+                return (
+                  <div className="w-xs bg-white shadow-xl rounded-sm p-4">
+                    <div className="flex flex-col gap-3">
+                      <div className="space-y-1">
+                        <p>Range Date: </p>
+                        <DatePicker.RangePicker
+                          value={
+                            valueFilter &&
+                            valueFilter.fromDate &&
+                            valueFilter.toDate
+                              ? [
+                                  dayjs(valueFilter.fromDate),
+                                  dayjs(valueFilter.toDate),
+                                ]
+                              : null
+                          }
+                          onChange={(val) => {
+                            if (val) {
+                              setValueFilter({
+                                ...valueFilter,
+                                fromDate: val[0]?.toISOString() || "",
+                                toDate: val[1]?.toISOString() || "",
+                              });
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <p>Status: </p>
+                        <Select
+                          allowClear
+                          className="w-full"
+                          placeholder="Choose status"
+                          options={statusItems.map((item) => {
+                            return {
+                              label: (
+                                <p className="capitalize">
+                                  {item?.key as string}
+                                </p>
+                              ),
+                              value: item?.key,
+                            };
+                          })}
+                          value={valueFilter?.status}
+                          onChange={(e) => {
+                            setValueFilter({
+                              ...valueFilter,
+                              status: e,
+                            });
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end items-center gap-2 mt-5">
+                      <Button
+                        onClick={() => {
+                          setValueFilter(initialFilter);
+                          setFilter(initialFilter);
+                        }}
+                      >
+                        Clear
+                      </Button>
+                      <Button
+                        type="primary"
+                        onClick={() => {
+                          if (valueFilter) {
+                            if (page !== 1) {
+                              setPage(1);
+                              setFilter({ ...valueFilter });
+                            }
+                          }
+                        }}
+                      >
+                        Done
+                      </Button>
+                    </div>
+                  </div>
+                );
               }}
             >
               <Button icon={<IoFilterOutline size={16} />}>Filters</Button>
@@ -267,6 +372,7 @@ const SaleOrders = () => {
                 setLimit(pageSize);
               },
               pageSize: limit,
+              current: page,
             }}
           />
         </div>

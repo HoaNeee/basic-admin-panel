@@ -436,7 +436,7 @@ const UpdateProduct = () => {
   return (
     <>
       {contextHolderMes}
-      <div className="h-full w-full relative pb-10">
+      <div className="h-full w-full relative p-3 pb-8">
         {(isUpdating || isLoading || !productDetail) && (
           <>
             <Loading type="screen" />

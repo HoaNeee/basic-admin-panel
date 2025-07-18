@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import LogoApp from "../../assets/logo.png";
 import { Button, Checkbox, Form, Input, message } from "antd";
 import { useForm } from "antd/es/form/Form";
@@ -29,8 +30,6 @@ const Login = () => {
       message.success("Login successfully!");
       navigate("/");
       dispatch(addAuth(response.data));
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.log(error);
       message.error(error.message);
