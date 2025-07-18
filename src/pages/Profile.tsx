@@ -8,53 +8,128 @@ import {
   Form,
   Input,
   message,
+  Space,
 } from "antd";
 import AVATARDEFAULT from "../assets/avatarNotFound.jpg";
-import { handleAPI } from "../apis/request";
+import { handleAPI, uploadImage } from "../apis/request";
 import { useEffect, useRef, useState } from "react";
-import type { AuthState } from "../redux/reducers/authReducer";
+import { updateOnlyAuthData } from "../redux/reducers/authReducer";
 import { FiEdit3, FiTrash } from "react-icons/fi";
 import { rules } from "../helpers/rulesGeneral";
 import { BiImageAdd } from "react-icons/bi";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../redux/store";
+import { RiImageAiFill } from "react-icons/ri";
 
 const Profile = () => {
-  const [user, setUser] = useState<AuthState>();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [file, setFile] = useState<File>();
+  const [avatar, setAvatar] = useState("");
+  const [isChangePassword, setIsChangePassword] = useState(false);
 
   const [form] = Form.useForm();
+  const [formChangePassword] = Form.useForm();
   const [messApi, context] = message.useMessage();
-  const [file, setFile] = useState<File>();
-
-  const fileRef = useRef(null);
+  const dispatch = useDispatch();
+  const auth = useSelector((state: RootState) => state.auth.auth);
 
   useEffect(() => {
-    getProfile();
-  }, []);
-
-  const getProfile = async () => {
-    try {
-      const api = `/auth/profile`;
-      const response = await handleAPI(api);
-      setUser(response.data);
-      form.setFieldsValue(response.data);
-    } catch (error) {
-      console.log(error);
+    if (auth.avatar) {
+      setAvatar(auth.avatar);
     }
-  };
+  }, [auth.avatar]);
+
+  const fileRef = useRef<any>(null);
 
   const handleEdit = async (values: any) => {
     try {
+      setIsUpdating(true);
       delete values.role;
-      console.log(values);
+      if (file) {
+        const responseUrl = await uploadImage("thumbnail", file);
+        values.avatar = responseUrl.data;
+      }
+
+      if (auth.avatar && !avatar) {
+        values.avatar = "";
+      }
+
+      const response: any = await handleAPI(
+        "/auth/profile/edit",
+        values,
+        "patch"
+      );
+      if (fileRef.current) {
+        fileRef.current.value = "";
+        fileRef.current.files = null;
+      }
+      setFile(undefined);
+      messApi.success(response.message);
+      dispatch(updateOnlyAuthData(values));
     } catch (error: any) {
       console.log(error);
       messApi.error(error.message);
+    } finally {
+      setIsUpdating(false);
     }
+  };
+
+  const handleChangePassword = async (values: any) => {
+    try {
+      setIsUpdating(true);
+      const response: any = await handleAPI(
+        "/auth/profile/change-password",
+        values,
+        "patch"
+      );
+
+      messApi.success(response.message);
+      setIsChangePassword(false);
+      formChangePassword.resetFields();
+    } catch (error: any) {
+      messApi.error(error.message);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const renderButton = () => {
+    return (
+      <Space className="mt-6">
+        <Button
+          loading={!isChangePassword && isUpdating}
+          onClick={() => {
+            if (isChangePassword) {
+              setIsChangePassword(false);
+            } else {
+              form.submit();
+            }
+          }}
+          type={isChangePassword ? "default" : "primary"}
+        >
+          {isChangePassword ? "Cancel" : "Edit Profile"}
+        </Button>
+        <Button
+          loading={isChangePassword && isUpdating}
+          type={isChangePassword ? "primary" : "default"}
+          onClick={() => {
+            if (!isChangePassword) {
+              setIsChangePassword(true);
+            } else {
+              formChangePassword.submit();
+            }
+          }}
+        >
+          Change Password
+        </Button>
+      </Space>
+    );
   };
 
   return (
     <>
       {context}
-      <div className="h-full p-8">
+      <div className="h-full p-8 relative">
         <Card className="h-full">
           <Flex justify="space-between" align="center">
             <div className="flex items-center gap-4">
@@ -64,8 +139,8 @@ const Profile = () => {
                   src={
                     file
                       ? URL.createObjectURL(file)
-                      : user?.avatar
-                      ? user.avatar
+                      : avatar
+                      ? avatar
                       : AVATARDEFAULT
                   }
                 />
@@ -80,6 +155,7 @@ const Profile = () => {
                         setFile(e.target.files[0]);
                       }
                     }}
+                    accept="image/*"
                   />
                   <Dropdown
                     menu={{
@@ -89,17 +165,39 @@ const Profile = () => {
                           label: (
                             <label
                               htmlFor="picker-avatar"
-                              className="cursor-pointer"
+                              className="cursor-pointer flex items-center gap-2"
                             >
-                              Add Image
+                              {auth.avatar ? (
+                                <RiImageAiFill size={18} />
+                              ) : (
+                                <BiImageAdd size={18} />
+                              )}
+                              {auth.avatar ? "Edit" : "Add"} Image
                             </label>
                           ),
-                          icon: <BiImageAdd size={18} />,
                         },
                         {
                           key: "remove",
-                          label: <p className="text-red-500">Remove</p>,
-                          icon: <FiTrash size={18} color="red" />,
+                          label: (
+                            <p
+                              className={`text-red-500 ${
+                                !auth.avatar ? "opacity-50" : ""
+                              }`}
+                            >
+                              Remove
+                            </p>
+                          ),
+                          icon: (
+                            <FiTrash
+                              className={`${!auth.avatar ? "opacity-50" : ""}`}
+                              size={18}
+                              color="red"
+                            />
+                          ),
+                          disabled: !auth.avatar,
+                          onClick: () => {
+                            setAvatar("");
+                          },
                         },
                       ],
                     }}
@@ -118,33 +216,97 @@ const Profile = () => {
                 </div>
               </div>
               <div className="">
-                <p className="font-semibold">{user?.fullName || "User"}</p>
+                <p className="font-semibold">{auth?.fullName || "User"}</p>
                 <p className="text-gray-400">
-                  {user?.email || "example@gmail.com"}
+                  {auth?.email || "example@gmail.com"}
                 </p>
               </div>
             </div>
-            <div>
-              <Button onClick={() => form.submit()} type="primary">
-                Edit Profile
-              </Button>
-            </div>
           </Flex>
-          <div className="mt-10 max-w-lg">
-            <Form name="user" form={form} size="large" onFinish={handleEdit}>
-              <Form.Item rules={rules} label="Full Name" name={"fullName"}>
-                <Input placeholder="Your Full Name" />
-              </Form.Item>
-              <Form.Item rules={rules} label="Email" name={"email"}>
-                <Input placeholder="Your Email" />
-              </Form.Item>
-              <Form.Item rules={rules} label="Role" name={"role"}>
-                <Input placeholder="Your Role" disabled />
-              </Form.Item>
-            </Form>
-            <Button type="primary" className="mt-6">
-              Change Password
-            </Button>
+          <div className="mt-10 transition-all duration-300 max-w-xl relative">
+            <div
+              className={`transition-all duration-300 absolute top-0 w-full`}
+              style={{
+                opacity: !isChangePassword ? "1" : "0",
+                pointerEvents: isChangePassword ? "none" : "auto",
+              }}
+            >
+              <Form
+                name="user"
+                form={form}
+                size="large"
+                onFinish={handleEdit}
+                initialValues={auth}
+              >
+                <Form.Item rules={rules} label="Full Name" name={"fullName"}>
+                  <Input placeholder="Your Full Name" />
+                </Form.Item>
+                <Form.Item rules={rules} label="Email" name={"email"}>
+                  <Input placeholder="Your Email" />
+                </Form.Item>
+                <Form.Item rules={rules} label="Role" name={"role"}>
+                  <Input placeholder="Your Role" disabled />
+                </Form.Item>
+              </Form>
+              {renderButton()}
+            </div>
+
+            <div
+              className={`transition-all duration-300 absolute top-0 w-full`}
+              style={{
+                opacity: isChangePassword ? "1" : "0",
+                pointerEvents: !isChangePassword ? "none" : "auto",
+              }}
+            >
+              <Form
+                name="changePassword"
+                form={formChangePassword}
+                size="large"
+                onFinish={handleChangePassword}
+              >
+                <Form.Item
+                  rules={rules}
+                  label="Current Password"
+                  name={"password"}
+                >
+                  <Input
+                    placeholder="Your Current Password"
+                    type="password"
+                    name="password"
+                  />
+                </Form.Item>
+                <Form.Item
+                  rules={rules}
+                  label="New Password"
+                  name={"newPassword"}
+                >
+                  <Input placeholder="Enter New Password" type="password" />
+                </Form.Item>
+                <Form.Item
+                  dependencies={["newPassword"]}
+                  rules={[
+                    {
+                      required: true,
+                    },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue("newPassword") === value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error("The confirm password do not match")
+                        );
+                      },
+                    }),
+                  ]}
+                  label="Confirm Password"
+                  name={"confirmPassword"}
+                >
+                  <Input placeholder="Enter Password" type="password" />
+                </Form.Item>
+              </Form>
+              {renderButton()}
+            </div>
           </div>
         </Card>
       </div>

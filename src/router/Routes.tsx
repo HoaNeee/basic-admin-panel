@@ -12,6 +12,7 @@ const Routes = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    //logic solve at server
     if (!auth.accessToken) {
       const auth = localStorage.getItem(appName.auth);
       const authData = localStorage.getItem(appName.authData);

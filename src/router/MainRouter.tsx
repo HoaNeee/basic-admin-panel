@@ -46,7 +46,12 @@ const MainRouter = () => {
           <Route element={<Promotions />} path="promotions" />
           <Route element={<Customers />} path="customers" />
           <Route element={<Reviews />} path="reviews" />
-          <Route element={<Profile />} path="profile" />
+          <Route path="profile" element={<Profile />} />
+          {/* <Route >
+              <Route path="" element={<ProfileComponent />} />
+              <Route path="change-password" element={<ChangePassword />} />
+            </Route> */}
+
           <Route element={<Setting />} path="setting" />
         </Route>
       </Routes>

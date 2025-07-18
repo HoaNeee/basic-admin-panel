@@ -39,11 +39,21 @@ const authSlice = createSlice({
         syncLocalStorage(appName.auth, auth);
       }
       syncLocalStorage(appName.authData, {
-        userId: action.payload.id,
+        userId: action.payload.userId,
         role: action.payload.role,
         email: action.payload.email,
         fullName: action.payload.fullName,
+        avatar: action.payload.avatar,
       });
+    },
+    updateOnlyAuthData: (state, action) => {
+      const auth = state.auth;
+      const payload = {
+        ...auth,
+        ...action.payload,
+      };
+      state.auth = payload;
+      syncLocalStorage(appName.authData, payload);
     },
     removeAuth: (state) => {
       state.auth = initialState;
@@ -54,7 +64,8 @@ const authSlice = createSlice({
   },
 });
 
-export const { addAuth, removeAuth, refreshToken } = authSlice.actions;
+export const { addAuth, removeAuth, refreshToken, updateOnlyAuthData } =
+  authSlice.actions;
 
 export default authSlice.reducer;
 

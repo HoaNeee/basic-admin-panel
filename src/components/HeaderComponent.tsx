@@ -4,13 +4,14 @@ import { IoSearchOutline } from "react-icons/io5";
 import { Link } from "react-router";
 import { PiUser } from "react-icons/pi";
 import { RxExit } from "react-icons/rx";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { removeAuth } from "../redux/reducers/authReducer";
 import AVATARDEFAULT from "../assets/avatarNotFound.jpg";
 import { BellOutlined } from "@ant-design/icons";
+import type { RootState } from "../redux/store";
 
 const HeaderComponent = () => {
-  // const auth = useSelector((state: RootState) => state.auth.auth);
+  const auth = useSelector((state: RootState) => state.auth.auth);
 
   const dispatch = useDispatch();
 
@@ -85,7 +86,7 @@ const HeaderComponent = () => {
             trigger={["click"]}
             placement="bottomRight"
           >
-            <Avatar src={AVATARDEFAULT} />
+            <Avatar src={auth.avatar || AVATARDEFAULT} />
           </Dropdown>
         </Space>
       </Flex>
