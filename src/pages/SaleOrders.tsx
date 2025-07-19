@@ -2,19 +2,14 @@
 import {
   Button,
   DatePicker,
-  Divider,
   Dropdown,
-  Flex,
-  Input,
   message,
   Modal,
   Select,
-  Space,
   Table,
   Tag,
   type MenuProps,
 } from "antd";
-import { IoFilterOutline } from "react-icons/io5";
 import { useEffect, useState } from "react";
 import { handleAPI } from "../apis/request";
 import type { ProductSaleOrder, SaleOrder } from "../models/saleOrder";
@@ -22,6 +17,7 @@ import type { ColumnType } from "antd/es/table";
 import { VND } from "../helpers/formatCurrency";
 import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
+import TableFilter from "../components/TableFilter";
 
 const statusItems: MenuProps["items"] = [
   {
@@ -65,9 +61,9 @@ const SaleOrders = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalRecord, setTotalRecord] = useState(10);
+  const [keyword, setKeyword] = useState("");
   const [openModalReson, setOpenModalReson] = useState(false);
   const [orderSelected, setOrderSelected] = useState<SaleOrder>();
-  const [keyword, setKeyword] = useState("");
   const [valueFilter, setValueFilter] = useState<FilterOrder>(initialFilter);
   const [filter, setFilter] = useState<FilterOrder>(initialFilter);
 
@@ -252,131 +248,89 @@ const SaleOrders = () => {
   return (
     <>
       {context}
-      <div className="bg-white w-full h-full p-5 rounded-sm">
-        <Flex justify="space-between" align="center">
-          <div className="flex gap-4 items-center">
-            <p className="text-lg font-medium">Sale Orders</p>
-          </div>
-          <Space size={5}>
-            <Input.Search
-              placeholder="Enter username..."
-              onSearch={(key) => {
-                if (page !== 1) {
-                  setPage(1);
+      <TableFilter
+        extra={<Button onClick={() => {}}>Download all</Button>}
+        title="Sale Orders"
+        onFilter={() => {
+          if (valueFilter) {
+            if (page !== 1) {
+              setPage(1);
+            }
+            setFilter({ ...valueFilter });
+          }
+        }}
+        onClearFilter={() => {
+          setValueFilter(initialFilter);
+          setFilter(initialFilter);
+        }}
+        onSearch={(key) => {
+          if (page !== 1) {
+            setPage(1);
+          }
+          setKeyword(key);
+        }}
+        placeholderInputSearch="Enter username..."
+        filter={
+          <div className="flex flex-col gap-3">
+            <div className="space-y-1">
+              <p>Range Date: </p>
+              <DatePicker.RangePicker
+                value={
+                  valueFilter && valueFilter.fromDate && valueFilter.toDate
+                    ? [dayjs(valueFilter.fromDate), dayjs(valueFilter.toDate)]
+                    : null
                 }
-                setKeyword(key);
-              }}
-              allowClear
-            />
-            <Dropdown
-              trigger={["click"]}
-              arrow
-              placement="bottom"
-              popupRender={() => {
-                return (
-                  <div className="w-xs bg-white shadow-xl rounded-sm p-4">
-                    <div className="flex flex-col gap-3">
-                      <div className="space-y-1">
-                        <p>Range Date: </p>
-                        <DatePicker.RangePicker
-                          value={
-                            valueFilter &&
-                            valueFilter.fromDate &&
-                            valueFilter.toDate
-                              ? [
-                                  dayjs(valueFilter.fromDate),
-                                  dayjs(valueFilter.toDate),
-                                ]
-                              : null
-                          }
-                          onChange={(val) => {
-                            if (val) {
-                              setValueFilter({
-                                ...valueFilter,
-                                fromDate: val[0]?.toISOString() || "",
-                                toDate: val[1]?.toISOString() || "",
-                              });
-                            }
-                          }}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <p>Status: </p>
-                        <Select
-                          allowClear
-                          className="w-full"
-                          placeholder="Choose status"
-                          options={statusItems.map((item) => {
-                            return {
-                              label: (
-                                <p className="capitalize">
-                                  {item?.key as string}
-                                </p>
-                              ),
-                              value: item?.key,
-                            };
-                          })}
-                          value={valueFilter?.status}
-                          onChange={(e) => {
-                            setValueFilter({
-                              ...valueFilter,
-                              status: e,
-                            });
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end items-center gap-2 mt-5">
-                      <Button
-                        onClick={() => {
-                          setValueFilter(initialFilter);
-                          setFilter(initialFilter);
-                        }}
-                      >
-                        Clear
-                      </Button>
-                      <Button
-                        type="primary"
-                        onClick={() => {
-                          if (valueFilter) {
-                            if (page !== 1) {
-                              setPage(1);
-                              setFilter({ ...valueFilter });
-                            }
-                          }
-                        }}
-                      >
-                        Done
-                      </Button>
-                    </div>
-                  </div>
-                );
-              }}
-            >
-              <Button icon={<IoFilterOutline size={16} />}>Filters</Button>
-            </Dropdown>
-            <Divider type="vertical" />
-            <Button onClick={() => {}}>Download all</Button>
-          </Space>
-        </Flex>
-        <div className="mt-4">
-          <Table
-            dataSource={saleOrders}
-            columns={columns}
-            rowKey="_id"
-            loading={isLoading}
-            pagination={{
-              total: totalRecord,
-              onChange(page, pageSize) {
-                setPage(page);
-                setLimit(pageSize);
-              },
-              pageSize: limit,
-              current: page,
-            }}
-          />
-        </div>
-      </div>
+                onChange={(val) => {
+                  if (val) {
+                    setValueFilter({
+                      ...valueFilter,
+                      fromDate: val[0]?.toISOString() || "",
+                      toDate: val[1]?.toISOString() || "",
+                    });
+                  }
+                }}
+              />
+            </div>
+            <div className="space-y-1">
+              <p>Status: </p>
+              <Select
+                allowClear
+                className="w-full"
+                placeholder="Choose status"
+                options={statusItems.map((item) => {
+                  return {
+                    label: <p className="capitalize">{item?.key as string}</p>,
+                    value: item?.key,
+                  };
+                })}
+                value={valueFilter?.status}
+                onChange={(e) => {
+                  setValueFilter({
+                    ...valueFilter,
+                    status: e,
+                  });
+                }}
+              />
+            </div>
+          </div>
+        }
+      >
+        <Table
+          dataSource={saleOrders}
+          columns={columns}
+          rowKey="_id"
+          loading={isLoading}
+          pagination={{
+            total: totalRecord,
+            onChange(page, pageSize) {
+              setPage(page);
+              setLimit(pageSize);
+            },
+            pageSize: limit,
+            current: page,
+          }}
+        />
+      </TableFilter>
       <ModalReson
         isOpen={openModalReson}
         onClose={() => {
