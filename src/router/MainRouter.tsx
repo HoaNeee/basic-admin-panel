@@ -18,6 +18,7 @@ import Customers from "../pages/Customers";
 import Reviews from "../pages/Reviews";
 import Setting from "../pages/Setting";
 import Profile from "../pages/Profile";
+import SaleOrderDetail from "../pages/SaleOrderDetail";
 
 const MainRouter = () => {
   return (
@@ -37,7 +38,10 @@ const MainRouter = () => {
           <Route element={<Category />} path="categories" />
           <Route element={<Reports />} path="reports" />
           <Route element={<Suppliers />} path="suppliers" />
-          <Route element={<SaleOrders />} path="sale-orders" />
+          <Route path="sale-orders">
+            <Route path="" element={<SaleOrders />} />
+            <Route path=":id" element={<SaleOrderDetail />} />
+          </Route>
           <Route path="purchase-orders">
             <Route index element={<Orders />} />
             <Route path="add-purchase-order" element={<AddPurchaseOrder />} />
@@ -47,10 +51,6 @@ const MainRouter = () => {
           <Route element={<Customers />} path="customers" />
           <Route element={<Reviews />} path="reviews" />
           <Route path="profile" element={<Profile />} />
-          {/* <Route >
-              <Route path="" element={<ProfileComponent />} />
-              <Route path="change-password" element={<ChangePassword />} />
-            </Route> */}
 
           <Route element={<Setting />} path="setting" />
         </Route>

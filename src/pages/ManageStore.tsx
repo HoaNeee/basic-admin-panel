@@ -1,5 +1,5 @@
 const ManageStore = () => {
-  return <div>ManageStore</div>;
+  return <div>ManagaStore</div>;
 };
 
 export default ManageStore;

@@ -9,11 +9,33 @@ import { removeAuth } from "../redux/reducers/authReducer";
 import AVATARDEFAULT from "../assets/avatarNotFound.jpg";
 import { BellOutlined } from "@ant-design/icons";
 import type { RootState } from "../redux/store";
+import { useEffect, useState } from "react";
+import { handleAPI } from "../apis/request";
+import NotificationComponent from "./NotificationComponent";
+import type { NotificationModel } from "../models/notificationModel";
 
 const HeaderComponent = () => {
-  const auth = useSelector((state: RootState) => state.auth.auth);
+  const [notifications, setNotifications] = useState<NotificationModel[]>([]);
+  const [readLength, setReadLength] = useState(0);
 
+  const auth = useSelector((state: RootState) => state.auth.auth);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    getNotification();
+  }, []);
+
+  const getNotification = async () => {
+    try {
+      const api = `/notifications`;
+      const response = await handleAPI(api);
+      const data: NotificationModel[] = response.data.notifications;
+      setNotifications(data);
+      setReadLength(data.filter((item) => !item.isRead).length);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <Header
@@ -37,11 +59,41 @@ const HeaderComponent = () => {
           <div className="relative w-fit h-fit">
             <div className="absolute flex items-center justify-center w-full h-full">
               <Popover
-                content={<div className="min-h-80 min-w-90">Content</div>}
+                styles={{
+                  body: {
+                    padding: "10px 0px 10px 10px",
+                  },
+                }}
+                className="bg-gray-100/30"
+                forceRender
+                content={
+                  <div
+                    className={`w-96  ${
+                      notifications.length > 0
+                        ? "h-90 overflow-hidden"
+                        : "min-h-80"
+                    }`}
+                  >
+                    <NotificationComponent
+                      notifications={notifications}
+                      onRead={(id) => {
+                        const items = [...notifications];
+                        const index = items.findIndex(
+                          (item) => item._id === id
+                        );
+                        if (index !== -1) {
+                          items[index].isRead = true;
+                          setNotifications(items);
+                          setReadLength(Math.max(0, readLength - 1));
+                        }
+                      }}
+                    />
+                  </div>
+                }
                 trigger={["click"]}
                 placement="bottomRight"
               >
-                <Badge count={1} className="" size="small">
+                <Badge count={readLength} className="" size="small">
                   <BellOutlined className="text-xl" />
                 </Badge>
               </Popover>

@@ -11,6 +11,11 @@ export interface SaleOrder {
   estimatedDelivery: string;
   paymentStatus: number;
   deleted: boolean;
+  cancel?: {
+    canceledBy: string;
+    canceledAt: string;
+    reasonCancel: string;
+  };
   createdAt: string;
   updatedAt: string;
   customer: Customer;

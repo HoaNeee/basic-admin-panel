@@ -28,7 +28,7 @@ const Reports = () => {
   const [categoriesTopSell, setCategoriesTopSell] = useState<
     ICategoriesTopSell[]
   >([]);
-  const [typeDate, setTypeDate] = useState("year");
+  const [typeDate, setTypeDate] = useState("weekly");
   const [topProductsSell, setTopProductsSell] = useState<ITopSell[]>([]);
 
   useEffect(() => {

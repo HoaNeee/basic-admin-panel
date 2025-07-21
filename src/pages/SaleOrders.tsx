@@ -18,11 +18,13 @@ import { VND } from "../helpers/formatCurrency";
 import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
 import TableFilter from "../components/TableFilter";
+import { Link } from "react-router";
 
 const statusItems: MenuProps["items"] = [
   {
     key: "pending",
     label: "Pending",
+    disabled: true,
   },
   {
     key: "confirmed",
@@ -62,7 +64,7 @@ const SaleOrders = () => {
   const [limit, setLimit] = useState(10);
   const [totalRecord, setTotalRecord] = useState(10);
   const [keyword, setKeyword] = useState("");
-  const [openModalReson, setOpenModalReson] = useState(false);
+  const [openModalReason, setOpenModalReason] = useState(false);
   const [orderSelected, setOrderSelected] = useState<SaleOrder>();
   const [valueFilter, setValueFilter] = useState<FilterOrder>(initialFilter);
   const [filter, setFilter] = useState<FilterOrder>(initialFilter);
@@ -92,6 +94,9 @@ const SaleOrders = () => {
       key: "orderno",
       title: "Order No",
       dataIndex: "orderNo",
+      render(value, record) {
+        return <Link to={`/sale-orders/${record._id}`}>{value}</Link>;
+      },
     },
     {
       key: "customer",
@@ -106,8 +111,23 @@ const SaleOrders = () => {
       },
     },
     {
+      key: "address",
+      title: "Address",
+      dataIndex: "shippingAddress",
+      render: (value) => {
+        return (
+          <div>
+            <p className="font-medium">
+              {value.name} - {value.phone}
+            </p>
+            <p>{value.address}</p>
+          </div>
+        );
+      },
+    },
+    {
       key: "createdAt",
-      title: "Ordere Date",
+      title: "Order Date",
       dataIndex: "createdAt",
       render: (value) => {
         return (
@@ -208,12 +228,12 @@ const SaleOrders = () => {
     order_id: string,
     payload: {
       status: string;
-      resonCancel?: string;
+      reasonCancel?: string;
       canceledBy?: string;
     }
   ) => {
     if (payload.status === "canceled") {
-      setOpenModalReson(true);
+      setOpenModalReason(true);
       return;
     }
     try {
@@ -303,7 +323,7 @@ const SaleOrders = () => {
                     value: item?.key,
                   };
                 })}
-                value={valueFilter?.status}
+                value={valueFilter?.status ? valueFilter.status : null}
                 onChange={(e) => {
                   setValueFilter({
                     ...valueFilter,
@@ -331,11 +351,11 @@ const SaleOrders = () => {
           }}
         />
       </TableFilter>
-      <ModalReson
-        isOpen={openModalReson}
+      <ModalReason
+        isOpen={openModalReason}
         onClose={() => {
           setOrderSelected(undefined);
-          setOpenModalReson(false);
+          setOpenModalReason(false);
         }}
         onOk={async (reson) => {
           if (orderSelected) {
@@ -346,7 +366,7 @@ const SaleOrders = () => {
                 resonCancel: reson,
                 canceledBy: "admin",
               });
-              setOpenModalReson(false);
+              setOpenModalReason(false);
             } catch (error) {
               console.log(error);
             } finally {
@@ -360,7 +380,7 @@ const SaleOrders = () => {
   );
 };
 
-const ModalReson = ({
+export const ModalReason = ({
   isOpen,
   onClose,
   onOk,
@@ -371,11 +391,11 @@ const ModalReson = ({
   onOk: (val: string) => void;
   loading?: boolean;
 }) => {
-  const [reson, setReson] = useState("");
+  const [reason, setReason] = useState("");
 
   const handleClose = () => {
     onClose();
-    setReson("");
+    setReason("");
   };
 
   return (
@@ -383,7 +403,7 @@ const ModalReson = ({
       open={isOpen}
       onCancel={handleClose}
       okText="Submit"
-      onOk={() => onOk(reson)}
+      onOk={() => onOk(reason)}
       title="Waiting..."
       closable={false}
       maskClosable={false}
@@ -398,8 +418,8 @@ const ModalReson = ({
         placeholder="Write something..."
         rows={6}
         className=""
-        value={reson}
-        onChange={(e) => setReson(e.target.value)}
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
       />
     </Modal>
   );
