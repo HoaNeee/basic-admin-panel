@@ -3,7 +3,7 @@ import queryString from "query-string";
 import { appName } from "../constants/appName";
 
 // const BASE_URL = `http://localhost:3001/admin`;
-const NEW_BASE_URL = `https://be-kkirst.onrender.com/admin`;
+const NEW_BASE_URL = `https://api.kakrist.site/admin`;
 
 const axiosClient = axios.create({
   baseURL: NEW_BASE_URL,

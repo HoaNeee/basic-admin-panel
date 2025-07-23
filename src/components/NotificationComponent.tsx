@@ -38,7 +38,7 @@ const NotificationComponent = (props: Props) => {
               if (!item.isRead) {
                 await handleRead(item._id);
               }
-              navigate(`${item.ref_link}/${item.ref_id}`);
+              navigate(`${item.ref_link}`);
             }}
           >
             <div className="flex items-center justify-between ">
