@@ -23,3 +23,7 @@ a {
 .dropdown-filter {
   box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
 }
+
+.inventories-table .ant-table-body {
+  max-height: calc(100vh - 280px) !important;
+}

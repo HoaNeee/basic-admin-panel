@@ -21,6 +21,8 @@ interface Props {
   onSelectChange?: (newSelect: React.Key[]) => void;
   selectedRowKeys?: React.Key[];
   pagination?: false | TablePaginationConfig | undefined;
+  style?: React.CSSProperties;
+  className?: string;
 }
 
 const MyTable = (props: Props) => {
@@ -38,6 +40,8 @@ const MyTable = (props: Props) => {
     onSelectChange,
     selectedRowKeys,
     pagination,
+    style,
+    className,
   } = props;
 
   const [totalRecord, setTotalRecord] = useState(0);
@@ -66,6 +70,8 @@ const MyTable = (props: Props) => {
 
   return (
     <Table
+      style={style}
+      className={className}
       bordered={bordered || false}
       loading={loading}
       columns={columns}

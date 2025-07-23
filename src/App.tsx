@@ -2,10 +2,18 @@ import { Provider } from "react-redux";
 import "./App.css";
 import Routes from "./router/Routes";
 import store from "./redux/store";
-import { ConfigProvider } from "antd";
+import { ConfigProvider, message } from "antd";
 import { appColor } from "./constants/appColor";
 
 function App() {
+  message.config({
+    top: 100,
+    duration: 2,
+    maxCount: 3,
+    rtl: true,
+    prefixCls: "my-message",
+  });
+
   return (
     <Provider store={store}>
       <ConfigProvider

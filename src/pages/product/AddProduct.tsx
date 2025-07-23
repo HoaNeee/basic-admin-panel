@@ -168,7 +168,7 @@ const AddProduct = () => {
 
       const response: any = await handleAPI(api, payload, "post");
       navigate(`/inventories/edit-product/${response.data._id}`);
-      mesApi.success(response.message);
+      message.success(response.message, 3000);
     } catch (error: any) {
       console.log(error);
       mesApi.error(error.message);
@@ -287,7 +287,6 @@ const AddProduct = () => {
   return (
     <>
       {contextHolderMes}
-
       <div className="h-full w-full relative p-3 pb-8">
         {(isLoading || isCreating) && (
           <>

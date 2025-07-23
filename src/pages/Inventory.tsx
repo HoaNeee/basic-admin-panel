@@ -348,7 +348,7 @@ const Inventory = () => {
     <>
       {contextHolder}
       {contextHolderModal}
-      <div className="bg-white w-full h-full px-3 py-2 rounded-sm">
+      <div className="bg-white w-full h-full px-3 py-2 rounded-sm flex flex-col">
         <Flex justify="space-between" align="center">
           <div className="flex gap-4 items-center">
             <p className="text-lg font-medium">Products</p>
@@ -404,13 +404,10 @@ const Inventory = () => {
                     onFilter={async (values: any) => {
                       setIsFilter(true);
                       setValueFilter(values);
-                      // await handleFilter(values, keyword);
                     }}
                     onClear={async () => {
                       setIsFilter(false);
-                      // if (isFilter) {
                       await getProducts(keyword);
-                      // }
                     }}
                   />
                 );
@@ -427,7 +424,7 @@ const Inventory = () => {
             <Button onClick={() => {}}>Download all</Button>
           </Space>
         </Flex>
-        <div className="mt-4">
+        <div className="mt-4 h-full inventories-table">
           <MyTable
             columns={columns}
             data={products}
@@ -438,6 +435,8 @@ const Inventory = () => {
               },
               total: totalRecord,
               showQuickJumper: true,
+              pageSize: limit,
+              current: page,
             }}
             rowKey="_id"
             loading={isLoading}
