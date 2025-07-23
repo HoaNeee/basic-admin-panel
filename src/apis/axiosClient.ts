@@ -3,9 +3,10 @@ import queryString from "query-string";
 import { appName } from "../constants/appName";
 
 const BASE_URL = `http://localhost:3001/admin`;
+const NEW_BASE_URL = `https://be-kkirst.onrender.com/admin`;
 
 const axiosClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: NEW_BASE_URL,
   paramsSerializer: (params) => queryString.stringify(params),
 });
 
@@ -44,7 +45,7 @@ axiosClient.interceptors.response.use(
           return Promise.reject(response.data);
         }
         refreshToken = JSON.parse(auth).refreshToken;
-        const res = await axios.get(BASE_URL + "/auth/refresh-token", {
+        const res = await axios.get(NEW_BASE_URL + "/auth/refresh-token", {
           headers: {
             Authorization: `Bearer ${refreshToken}`,
           },
