@@ -112,7 +112,7 @@ const Promotions = () => {
       key: "expired",
       title: "Status",
       dataIndex: "promotionType",
-      render: (val: string, record) => {
+      render: (_val, record) => {
         if (!record.endAt) {
           if (record.maxUse !== null && record.maxUse === 0) {
             return <Tag color="red">Out of uses</Tag>;

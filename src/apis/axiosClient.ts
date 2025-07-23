@@ -2,7 +2,7 @@ import axios from "axios";
 import queryString from "query-string";
 import { appName } from "../constants/appName";
 
-const BASE_URL = `http://localhost:3001/admin`;
+// const BASE_URL = `http://localhost:3001/admin`;
 const NEW_BASE_URL = `https://be-kkirst.onrender.com/admin`;
 
 const axiosClient = axios.create({
