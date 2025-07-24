@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useParams } from "react-router";
 import { handleAPI } from "../apis/request";
 import type { SaleOrder } from "../models/saleOrder";
@@ -10,38 +10,76 @@ import {
   Dropdown,
   List,
   message,
-  Tag,
   type MenuProps,
 } from "antd";
-import { IoMdAirplane } from "react-icons/io";
+import {
+  FiArrowLeft,
+  FiUser,
+  FiMapPin,
+  FiPhone,
+  FiCalendar,
+  FiTruck,
+  FiPackage,
+  FiCreditCard,
+  FiDollarSign,
+  FiPercent,
+  FiTag,
+  FiClock,
+  FiCheck,
+  FiX,
+  FiShoppingBag,
+} from "react-icons/fi";
 import { VND } from "../helpers/formatCurrency";
 import { format } from "date-fns";
 import { ModalReason } from "./SaleOrders";
 import Loading from "../components/Loading";
-import { FaArrowLeftLong } from "react-icons/fa6";
 
 const statusItems: MenuProps["items"] = [
   {
     key: "pending",
-    label: "Pending",
+    label: (
+      <div className="flex items-center gap-2">
+        <FiClock className="w-4 h-4 text-yellow-500" />
+        <span>Pending</span>
+      </div>
+    ),
     disabled: true,
   },
   {
     key: "confirmed",
-    label: "Confirmed",
+    label: (
+      <div className="flex items-center gap-2">
+        <FiCheck className="w-4 h-4 text-blue-500" />
+        <span>Confirmed</span>
+      </div>
+    ),
   },
-
   {
     key: "shipping",
-    label: "Shipping",
+    label: (
+      <div className="flex items-center gap-2">
+        <FiTruck className="w-4 h-4 text-purple-500" />
+        <span>Shipping</span>
+      </div>
+    ),
   },
   {
     key: "canceled",
-    label: "Canceled",
+    label: (
+      <div className="flex items-center gap-2">
+        <FiX className="w-4 h-4 text-gray-500" />
+        <span>Canceled</span>
+      </div>
+    ),
   },
   {
     key: "delivered",
-    label: "Delivered",
+    label: (
+      <div className="flex items-center gap-2">
+        <FiPackage className="w-4 h-4 text-green-500" />
+        <span>Delivered</span>
+      </div>
+    ),
   },
 ];
 
@@ -55,13 +93,7 @@ const SaleOrderDetail = () => {
   const params = useParams();
   const order_id = params.id;
 
-  useEffect(() => {
-    if (order_id) {
-      getOrderDetail(order_id);
-    }
-  }, [order_id]);
-
-  const getOrderDetail = async (id: string) => {
+  const getOrderDetail = useCallback(async (id: string) => {
     try {
       setIsLoading(true);
       const api = `/orders/detail/${id}`;
@@ -73,7 +105,13 @@ const SaleOrderDetail = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (order_id) {
+      getOrderDetail(order_id);
+    }
+  }, [order_id, getOrderDetail]);
 
   const renderDiscount = (order?: SaleOrder) => {
     if (!order) {
@@ -145,27 +183,36 @@ const SaleOrderDetail = () => {
   };
 
   const renderStatus = (value: string) => {
-    let color = "";
-    switch (value) {
-      case "pending":
-        color = "gold";
-        break;
-      case "delivered":
-        color = "green";
-        break;
-      case "canceled":
-        color = "gray";
-        break;
-      case "shipping":
-        color = "red";
-        break;
-      case "confirmed":
-        color = "blue";
-        break;
+    const statusConfig = {
+      pending: {
+        color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+        icon: <FiClock className="w-3 h-3" />,
+        label: "Pending",
+      },
+      delivered: {
+        color: "bg-green-100 text-green-800 border-green-200",
+        icon: <FiPackage className="w-3 h-3" />,
+        label: "Delivered",
+      },
+      canceled: {
+        color: "bg-gray-100 text-gray-800 border-gray-200",
+        icon: <FiX className="w-3 h-3" />,
+        label: "Canceled",
+      },
+      shipping: {
+        color: "bg-purple-100 text-purple-800 border-purple-200",
+        icon: <FiTruck className="w-3 h-3" />,
+        label: "Shipping",
+      },
+      confirmed: {
+        color: "bg-blue-100 text-blue-800 border-blue-200",
+        icon: <FiCheck className="w-3 h-3" />,
+        label: "Confirmed",
+      },
+    };
 
-      default:
-        break;
-    }
+    const config = statusConfig[value as keyof typeof statusConfig];
+
     return (
       <Dropdown
         menu={{
@@ -179,9 +226,14 @@ const SaleOrderDetail = () => {
         trigger={["click"]}
         placement="bottomRight"
       >
-        <Tag color={color} className="cursor-pointer capitalize">
-          {value}
-        </Tag>
+        <div
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer hover:shadow-sm transition-shadow ${
+            config?.color || "bg-gray-100 text-gray-800 border-gray-200"
+          }`}
+        >
+          {config?.icon}
+          <span className="capitalize">{config?.label || value}</span>
+        </div>
       </Dropdown>
     );
   };
@@ -189,152 +241,261 @@ const SaleOrderDetail = () => {
   return (
     <>
       {context}
-      <Card className="w-full h-full relative">
-        <div className="mb-3">
-          <Link to={"/sale-orders"}>
-            <Button icon={<FaArrowLeftLong />}></Button>
-          </Link>
-        </div>
-        {(isUpdating || isLoading) && <Loading type="screen" />}
-        <div className="flex flex-col gap-2">
-          <h2 className="text-xl font-semibold">
-            Order Number: {orderDetail?.orderNo}
-          </h2>
-          <div className="flex my-2 items-center gap-2">
-            <p className="text-gray-400">
-              Order date:{" "}
-              <span className="text-black">
-                {format(orderDetail?.createdAt || new Date(), "PP")}
-              </span>
-            </p>
-            <Divider type="vertical" />
-            <div className="flex items-center gap-2 font-semibold text-green-600">
-              <IoMdAirplane size={17} />
-              <p>
-                Estimated delivery:{" "}
-                {format(orderDetail?.estimatedDelivery || new Date(), "PP")}
-              </p>
-            </div>
-            <Divider type="vertical" />
-            <p className="text-gray-500">
-              Status: <span>{renderStatus(orderDetail?.status || "")}</span>
-            </p>
-          </div>
-          {orderDetail &&
-            orderDetail.status === "canceled" &&
-            orderDetail.cancel && (
-              <div className="my-2 flex flex-col gap-2">
-                <div className="flex items-center gap-1 text-neutral-400 ">
-                  <p>
-                    Canceled At:{" "}
-                    <span className="text-black">
-                      {format(
-                        orderDetail.cancel.canceledAt || new Date(),
-                        "PP"
-                      )}
-                    </span>
-                  </p>
-                  <Divider type="vertical" />
-                  <p>
-                    Canceled By:{" "}
-                    <span className="text-black">
-                      {orderDetail.cancel.canceledBy}
-                    </span>
-                  </p>
-                </div>
-                <p className="my-2">
-                  Reason: {orderDetail.cancel.reasonCancel}
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4 mb-6">
+          <div className="flex items-center gap-4">
+            <Link to="/sale-orders">
+              <Button
+                icon={<FiArrowLeft className="w-4 h-4" />}
+                className="flex items-center justify-center"
+                size="large"
+              />
+            </Link>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FiShoppingBag className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  Order Details
+                </h1>
+                <p className="text-sm text-gray-500">
+                  Order #{orderDetail?.orderNo || "Loading..."}
                 </p>
               </div>
-            )}
-          <div className="py-4 border-b-2 border-t-2 border-gray-100">
-            <List
-              dataSource={orderDetail?.products}
-              renderItem={(item) => {
-                return (
-                  <List.Item className="w-full">
-                    <div className="flex justify-between w-full lg:max-w-1/2">
-                      <div className="flex gap-4 w-full">
-                        <div className="w-20 h-20 rounded-md overflow-hidden bg-gray-200/70">
-                          <img
-                            src={item.thumbnail}
-                            alt={item.title}
-                            className="w-full h-full object-cover"
-                          />
+            </div>
+          </div>
+        </div>
+
+        {/* Loading Overlay */}
+        {(isUpdating || isLoading) && <Loading type="screen" />}
+
+        {/* Main Content */}
+        <div className="px-6 pb-6">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Order Info Card */}
+            <Card className="xl:col-span-2 shadow-sm border-0">
+              <div className="space-y-6">
+                {/* Order Header */}
+                <div className="border-b border-gray-100 pb-4">
+                  <div className="flex flex-wrap items-center gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <FiCalendar className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-600">Order date:</span>
+                      <span className="font-medium text-gray-900">
+                        {format(orderDetail?.createdAt || new Date(), "PP")}
+                      </span>
+                    </div>
+                    <Divider type="vertical" className="h-4" />
+                    <div className="flex items-center gap-2 text-emerald-600">
+                      <FiTruck className="w-4 h-4" />
+                      <span className="font-medium">
+                        Estimated delivery:{" "}
+                        {format(
+                          orderDetail?.estimatedDelivery || new Date(),
+                          "PP"
+                        )}
+                      </span>
+                    </div>
+                    <Divider type="vertical" className="h-4" />
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-600">Status:</span>
+                      {renderStatus(orderDetail?.status || "")}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cancellation Info */}
+                {orderDetail?.status === "canceled" && orderDetail.cancel && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-red-700 font-medium mb-2">
+                      <FiX className="w-4 h-4" />
+                      Order Canceled
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <FiCalendar className="w-3 h-3 text-red-500" />
+                          <span className="text-red-600">Canceled at:</span>
+                          <span className="text-red-900 font-medium">
+                            {format(
+                              orderDetail.cancel.canceledAt || new Date(),
+                              "PP"
+                            )}
+                          </span>
                         </div>
-                        <div className="flex flex-col gap-1">
-                          <p className="tracking-wider">{item.title}</p>
-                          {item.options && (
-                            <p className="text-neutral-400">
-                              {item.options.join(" | ")}
-                            </p>
-                          )}
+                        <div className="flex items-center gap-2">
+                          <FiUser className="w-3 h-3 text-red-500" />
+                          <span className="text-red-600">Canceled by:</span>
+                          <span className="text-red-900 font-medium">
+                            {orderDetail.cancel.canceledBy}
+                          </span>
                         </div>
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <p className="text-base font-semibold">
-                          {VND.format(item.price)}
-                        </p>
-                        <p className="text-neutral-400 text-nowrap">
-                          Qty: {item.quantity}
+                      <div className="mt-2">
+                        <span className="text-red-600">Reason:</span>
+                        <p className="text-red-900 mt-1">
+                          {orderDetail.cancel.reasonCancel}
                         </p>
                       </div>
                     </div>
-                  </List.Item>
-                );
-              }}
-            />
-          </div>
-          <div className="grid grid-cols-2 mt-3 border-b-2 border-gray-100 pb-5">
-            <div className="">
-              <p className="text-base font-medium">Payment</p>
-              <p className="my-2">
-                Cash on delivering <span className="uppercase ">(COD)</span>
-              </p>
-            </div>
-            <div>
-              <p className="text-base font-medium">Delivery</p>
-              <p className="mt-3 mb-2 text-gray-400">Address</p>
-              <div className="opacity-80 text-base tracking-wider">
-                <p>{orderDetail?.shippingAddress.name}</p>
-                <p>{orderDetail?.shippingAddress.address}</p>
-                <p>{orderDetail?.shippingAddress.phone}</p>
+                  </div>
+                )}
+
+                {/* Products List */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <FiPackage className="w-5 h-5 text-gray-600" />
+                    Order Items
+                  </h3>
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <List
+                      dataSource={orderDetail?.products}
+                      renderItem={(item, index) => (
+                        <List.Item
+                          className={`px-4 py-4 ${
+                            index > 0 ? "border-t border-gray-100" : ""
+                          }`}
+                        >
+                          <div className="flex justify-between w-full px-4">
+                            <div className="flex gap-4 flex-1">
+                              <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                                <img
+                                  src={item.thumbnail}
+                                  alt={item.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1 flex-1">
+                                <h4 className="font-medium text-gray-900 line-clamp-2">
+                                  {item.title}
+                                </h4>
+                                {item.options && (
+                                  <p className="text-sm text-gray-500 flex items-center gap-1">
+                                    <FiTag className="w-3 h-3" />
+                                    {item.options.join(" | ")}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                              <p className="text-lg font-semibold text-gray-900">
+                                {VND.format(item.price)}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                Qty: {item.quantity}
+                              </p>
+                            </div>
+                          </div>
+                        </List.Item>
+                      )}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="px-10">
-            <p className="text-base font-medium mt-3">Order Summary</p>
-            <div className="flex flex-col gap-2 mt-4">
-              <div className="flex items-center justify-between text-base">
-                <p className="">Subtotal</p>
-                <p className="">
-                  {VND.format(
-                    orderDetail?.products.reduce(
-                      (val, item) => val + item.price * item.quantity,
-                      0
-                    ) || 0
-                  )}
-                </p>
-              </div>
-              <div className="flex items-center justify-between px-2 text-gray-400">
-                <p className="">Discount</p>
-                <p className="">{renderDiscount(orderDetail)}</p>
-              </div>
-              <div className="flex items-center justify-between px-2 text-gray-400">
-                <p className="">Delivery</p>
-                <p className="">{VND.format(0)}</p>
-              </div>
-              <div className="border-1 my-2 border-gray-200/60 w-full"></div>
-              <div className="flex items-center justify-between text-base">
-                <p>Total</p>
-                <p className="font-semibold text-lg">
-                  {VND.format(orderDetail?.totalPrice || 0)}
-                </p>
-              </div>
+            </Card>
+
+            <div className="flex flex-col gap-2">
+              <Card className="shadow-sm border-0">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <FiCreditCard className="w-5 h-5 text-gray-600" />
+                    Payment
+                  </h3>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center gap-2">
+                      <FiDollarSign className="w-4 h-4 text-green-600" />
+                      <span className="font-medium text-gray-900">
+                        Cash on Delivery
+                      </span>
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                        COD
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Delivery Info */}
+              <Card className="shadow-sm border-0">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <FiMapPin className="w-5 h-5 text-gray-600" />
+                    Delivery Address
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <FiUser className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <span className="font-medium text-gray-900">
+                        {orderDetail?.shippingAddress.name}
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <FiMapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-700">
+                        {orderDetail?.shippingAddress.address}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FiPhone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <span className="text-gray-700">
+                        {orderDetail?.shippingAddress.phone}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Order Summary */}
+              <Card className="shadow-sm border-0">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <FiDollarSign className="w-5 h-5 text-gray-600" />
+                    Order Summary
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Subtotal</span>
+                      <span className="font-medium text-gray-900">
+                        {VND.format(
+                          orderDetail?.products.reduce(
+                            (val, item) => val + item.price * item.quantity,
+                            0
+                          ) || 0
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-1">
+                        <FiPercent className="w-3 h-3 text-gray-400" />
+                        <span className="text-gray-500">Discount</span>
+                      </div>
+                      <span className="text-gray-500">
+                        {renderDiscount(orderDetail)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-1">
+                        <FiTruck className="w-3 h-3 text-gray-400" />
+                        <span className="text-gray-500">Delivery</span>
+                      </div>
+                      <span className="text-gray-500">{VND.format(0)}</span>
+                    </div>
+                    <Divider className="my-3" />
+                    <div className="flex items-center justify-between text-lg">
+                      <span className="font-semibold text-gray-900">Total</span>
+                      <span className="font-bold text-xl text-gray-900">
+                        {VND.format(orderDetail?.totalPrice || 0)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
             </div>
           </div>
         </div>
-      </Card>
+      </div>
       <ModalReason
         isOpen={openModalReason}
         onClose={() => {

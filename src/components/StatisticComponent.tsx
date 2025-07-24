@@ -27,12 +27,16 @@ const StatisticComponent = (props: Props) => {
         </div>
       )}
       <div
-        className={`flex justify-between w-full text-base text-gray-600/80 ${
-          type === "vertical" ? "flex-col items-center" : "flex-row"
+        className={`flex  w-full text-base text-gray-600/80 ${
+          type === "vertical"
+            ? "flex-col items-center justify-between"
+            : "flex-row md:justify-between justify-center md:gap-0 gap-3"
         }`}
       >
-        <p className="font-semibold">{value ?? 0}</p>
-        <p className={`font-medium text-sm ${cnLabel}`}>{label || ""}</p>
+        <p className="font-semibold md:text-base text-sm">{value ?? 0}</p>
+        <p className={`font-medium text-xs md:text-sm ${cnLabel}`}>
+          {label || ""}
+        </p>
       </div>
     </div>
   );

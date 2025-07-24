@@ -7,3 +7,21 @@ export const appColor = {
   gray200: "#b9bdc7",
   gray600: "#5d6679",
 };
+
+export const colorArray = [
+  "red",
+  "green",
+  "blue",
+  "yellow",
+  "purple",
+  "orange",
+  "pink",
+  "cyan",
+  "lime",
+  "teal",
+  "navy",
+  "maroon",
+  "olive",
+  "silver",
+  "gold",
+];

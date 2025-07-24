@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Button, Flex, message, Popconfirm, Space, Tag } from "antd";
-import MyTable from "../components/MyTable";
+import { Button, Flex, message, Popconfirm, Space, Table, Tag } from "antd";
 import { useEffect, useState } from "react";
 import ModalAddPromotion from "../components/modals/ModalAddPromotion";
 import { handleAPI } from "../apis/request";
@@ -56,7 +55,17 @@ const Promotions = () => {
       title: "Thumbnail",
       dataIndex: "thumbnail",
       render: (val: any) => {
-        return <>{val ? <img src={val} alt="" /> : "-"}</>;
+        return (
+          <>
+            {val ? (
+              <div className="w-20 h-20">
+                <img src={val} alt="" className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              "-"
+            )}
+          </>
+        );
       },
     },
     {
@@ -243,13 +252,15 @@ const Promotions = () => {
           </Space>
         </Flex>
         <div className="mt-4">
-          <MyTable
+          <Table
             columns={columns}
-            data={promotions}
+            dataSource={promotions}
             rowKey="_id"
-            onChange={() => {}}
-            onShowSizeChange={() => {}}
             loading={isLoading}
+            scroll={{
+              x: "800px",
+              y: "calc(100vh - 200px)",
+            }}
           />
         </div>
       </div>

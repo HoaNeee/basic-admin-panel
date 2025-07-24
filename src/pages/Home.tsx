@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Loading from "../components/Loading";
-import { Button, Card } from "antd";
+import { Card } from "antd";
 import StatisticComponent from "../components/StatisticComponent";
 import { LuChartNoAxesCombined, LuMapPinHouse } from "react-icons/lu";
 import { AiOutlineLineChart } from "react-icons/ai";
@@ -80,20 +80,6 @@ const Home = () => {
 
   return (
     <div className="relative flex flex-col gap-4">
-      <Button
-        onClick={async () => {
-          const response = await handleAPI(
-            "/products/test-socket",
-            {
-              message: "test socket",
-            },
-            "post"
-          );
-          console.log(response);
-        }}
-      >
-        Test socket
-      </Button>
       <div className="flex items-center gap-4 lg:flex-row flex-col">
         <Card className="lg:w-4/6 relative w-full">
           {isLoading && <Loading type="screen" />}

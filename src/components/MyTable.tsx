@@ -90,11 +90,13 @@ const MyTable = (props: Props) => {
       rowSelection={isSelectionRow ? rowSelection : undefined}
       scroll={{
         y: 470,
+        x: "auto",
       }}
       components={{
         header: {
           cell: renderHeader,
         },
+        body: {},
       }}
     />
   );

@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Dropdown, message, Select, Table, Tag, type MenuProps } from "antd";
+import { Dropdown, message, Select, Table, type MenuProps } from "antd";
 import TableFilter from "../components/TableFilter";
 import { handleAPI } from "../apis/request";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { CustomerModel } from "../models/customerModel";
 import type { ColumnType } from "antd/es/table";
+import { FiUsers, FiMail, FiCalendar, FiShield } from "react-icons/fi";
 
 const statusItems: MenuProps["items"] = [
   {
@@ -37,11 +38,7 @@ const Customers = () => {
 
   const [messApi, context] = message.useMessage();
 
-  useEffect(() => {
-    getCustomers();
-  }, [page, filter, keyword]);
-
-  const getCustomers = async () => {
+  const getCustomers = useCallback(async () => {
     try {
       setIsLoading(true);
       const api = `/customers?page=${page}&limit=${limit}&status=${filter.status}&keyword=${keyword}`;
@@ -53,7 +50,11 @@ const Customers = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, limit, filter.status, keyword]);
+
+  useEffect(() => {
+    getCustomers();
+  }, [getCustomers]);
 
   const handleUpdateStatus = async (cus_id: string, status: string) => {
     try {
@@ -85,55 +86,108 @@ const Customers = () => {
   const columns: ColumnType<CustomerModel>[] = [
     {
       key: "fullName",
-      title: "Full Name",
+      title: (
+        <div className="flex items-center gap-2">
+          <FiUsers className="w-4 h-4 text-blue-600" />
+          <span className="font-semibold">Full Name</span>
+        </div>
+      ),
       dataIndex: "firstName",
       render: (_, record) => {
         return (
-          <p>
-            {record?.firstName || ""} {record?.lastName || ""}
-          </p>
+          <div className="flex items-center">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+              <span className="text-sm font-medium text-blue-600">
+                {(record?.firstName?.[0] || "") + (record?.lastName?.[0] || "")}
+              </span>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">
+                {record?.firstName || ""} {record?.lastName || ""}
+              </p>
+            </div>
+          </div>
         );
       },
     },
     {
       key: "email",
-      title: "Email",
+      title: (
+        <div className="flex items-center gap-2">
+          <FiMail className="w-4 h-4 text-green-600" />
+          <span className="font-semibold">Email Address</span>
+        </div>
+      ),
       dataIndex: "email",
+      render: (value) => (
+        <div className="flex items-center">
+          <span className="text-gray-700">{value}</span>
+        </div>
+      ),
     },
     {
       key: "join",
-      title: "Join At",
+      title: (
+        <div className="flex items-center gap-2">
+          <FiCalendar className="w-4 h-4 text-purple-600" />
+          <span className="font-semibold">Join Date</span>
+        </div>
+      ),
       dataIndex: "createdAt",
       render: (value) => {
         return (
-          <p>
-            {new Date(value).toLocaleDateString("vi", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            })}
-          </p>
+          <div className="flex items-center">
+            <div className="text-sm">
+              <div className="font-medium text-gray-900">
+                {new Date(value).toLocaleDateString("en-US", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </div>
+              <div className="text-gray-500">
+                {new Date(value).toLocaleDateString("en-US", {
+                  weekday: "short",
+                })}
+              </div>
+            </div>
+          </div>
         );
       },
     },
-
     {
       key: "status",
-      title: "Status",
+      title: (
+        <div className="flex items-center gap-2">
+          <FiShield className="w-4 h-4 text-orange-600" />
+          <span className="font-semibold">Status</span>
+        </div>
+      ),
       dataIndex: "status",
       align: "center",
       render: (value, record) => {
         let color = "";
+        let bgColor = "";
+        let borderColor = "";
+
         switch (value) {
           case "active":
-            color = "green";
+            color = "text-green-700";
+            bgColor = "bg-green-50";
+            borderColor = "border-green-200";
             break;
           case "banned":
-            color = "red";
+            color = "text-red-700";
+            bgColor = "bg-red-50";
+            borderColor = "border-red-200";
             break;
           default:
+            color = "text-gray-700";
+            bgColor = "bg-gray-50";
+            borderColor = "border-gray-200";
             break;
         }
+
         return (
           <Dropdown
             menu={{
@@ -147,9 +201,16 @@ const Customers = () => {
             trigger={["click"]}
             placement="bottomRight"
           >
-            <Tag color={color} className="cursor-pointer capitalize">
-              {value}
-            </Tag>
+            <div
+              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border cursor-pointer hover:shadow-sm transition-all ${color} ${bgColor} ${borderColor}`}
+            >
+              <div
+                className={`w-2 h-2 rounded-full mr-2 ${
+                  value === "active" ? "bg-green-500" : "bg-red-500"
+                }`}
+              ></div>
+              <span className="capitalize">{value}</span>
+            </div>
           </Dropdown>
         );
       },
@@ -159,81 +220,147 @@ const Customers = () => {
   return (
     <>
       {context}
-      <div className="w-full h-full">
-        <TableFilter
-          onSearch={(key) => {
-            if (page !== 1) {
-              setPage(1);
-            }
-            setKeyword(key);
-          }}
-          title="Customers"
-          filter={
-            <div className="flex flex-col gap-3">
-              <div className="space-y-1">
-                <p>Status: </p>
-                <Select
-                  allowClear
-                  className="w-full"
-                  placeholder="Choose status"
-                  options={statusItems.map((item) => {
-                    return {
-                      label: (
-                        <p className="capitalize">{item?.key as string}</p>
-                      ),
-                      value: item?.key,
-                    };
-                  })}
-                  onClear={() => {
-                    setValueFilter({
-                      ...valueFilter,
-                      status: "",
-                    });
-                  }}
-                  value={valueFilter.status || null}
-                  onChange={(e) => {
-                    if (e) {
-                      setValueFilter({
-                        ...valueFilter,
-                        status: e,
-                      });
-                    }
-                  }}
-                />
+      <div className="min-h-screen bg-gray-50">
+        {/* Page Header */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FiUsers className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  Customer Management
+                </h1>
+                <p className="text-sm text-gray-500">
+                  Manage customer accounts and status
+                </p>
               </div>
             </div>
-          }
-          onFilter={() => {
-            if (page !== 1) {
-              setPage(1);
-            }
-            setFilter(valueFilter);
-          }}
-          onClearFilter={() => {
-            if (page !== 1) {
-              setPage(1);
-            } else if (valueFilter) {
-              setFilter(initialFilter);
-              setValueFilter(initialFilter);
-            }
-          }}
-        >
-          <Table
-            dataSource={customers}
-            columns={columns}
-            loading={isLoading}
-            rowKey={"_id"}
-            pagination={{
-              pageSize: limit,
-              total: totalRecord,
-              onChange(page, pageSize) {
-                setPage(page);
-                setLimit(pageSize);
-              },
-              current: page,
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <div className="text-sm text-gray-500">Total Customers</div>
+                <div className="text-lg font-semibold text-gray-900">
+                  {totalRecord || 0}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="px-6">
+          <TableFilter
+            onSearch={(key) => {
+              if (page !== 1) {
+                setPage(1);
+              }
+              setKeyword(key);
             }}
-          />
-        </TableFilter>
+            title=""
+            filter={
+              <div className="flex flex-col gap-3">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Filter by Status
+                  </label>
+                  <Select
+                    allowClear
+                    className="w-full"
+                    placeholder="Choose status"
+                    options={statusItems.map((item) => {
+                      return {
+                        label: (
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`w-2 h-2 rounded-full ${
+                                item?.key === "active"
+                                  ? "bg-green-500"
+                                  : "bg-red-500"
+                              }`}
+                            ></div>
+                            <span className="capitalize">
+                              {item?.key as string}
+                            </span>
+                          </div>
+                        ),
+                        value: item?.key,
+                      };
+                    })}
+                    onClear={() => {
+                      setValueFilter({
+                        ...valueFilter,
+                        status: "",
+                      });
+                    }}
+                    value={valueFilter.status || null}
+                    onChange={(e) => {
+                      if (e) {
+                        setValueFilter({
+                          ...valueFilter,
+                          status: e,
+                        });
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            }
+            onFilter={() => {
+              if (page !== 1) {
+                setPage(1);
+              }
+              setFilter(valueFilter);
+            }}
+            onClearFilter={() => {
+              if (page !== 1) {
+                setPage(1);
+              } else if (valueFilter) {
+                setFilter(initialFilter);
+                setValueFilter(initialFilter);
+              }
+            }}
+          >
+            <Table
+              dataSource={customers}
+              columns={columns}
+              loading={isLoading}
+              rowKey={"_id"}
+              pagination={{
+                pageSize: limit,
+                total: totalRecord,
+                onChange(page, pageSize) {
+                  setPage(page);
+                  setLimit(pageSize);
+                },
+                current: page,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} of ${total} customers`,
+              }}
+              className="border-none"
+              scroll={{
+                x: "100%",
+              }}
+              locale={{
+                emptyText: (
+                  <div className="py-12 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                      <FiUsers className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No customers found
+                    </h3>
+                    <p className="text-gray-500">
+                      No customers match your current filters
+                    </p>
+                  </div>
+                ),
+              }}
+            />
+          </TableFilter>
+        </div>
       </div>
     </>
   );

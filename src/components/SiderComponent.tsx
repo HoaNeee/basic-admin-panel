@@ -13,6 +13,13 @@ import { appName } from "../constants/appName";
 import { RiDiscountPercentLine } from "react-icons/ri";
 import { PiUsersThree } from "react-icons/pi";
 import { IoSettingsOutline } from "react-icons/io5";
+import React, { useEffect, useState } from "react";
+
+// Component props interface
+interface SiderComponentProps {
+  collapsed: boolean;
+  onCollapse: (collapsed: boolean) => void;
+}
 
 const items: MenuProps["items"] = [
   {
@@ -160,65 +167,168 @@ const items: MenuProps["items"] = [
   },
 ];
 
-const SiderComponent = () => {
+const SiderComponent: React.FC<SiderComponentProps> = ({
+  collapsed,
+  onCollapse,
+}) => {
   const location = useLocation();
-
+  const navigate = useNavigate();
   const pathName = location.pathname;
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 992);
+    };
+
+    checkIsMobile();
+    window.addEventListener("resize", checkIsMobile);
+
+    return () => {
+      window.removeEventListener("resize", checkIsMobile);
+    };
+  }, []);
 
   const keyOpen =
     pathName.substring(1).substring(0, pathName.substring(1).indexOf("/")) ||
     pathName.substring(1);
 
-  const navigate = useNavigate();
+  // Handle mobile menu close when clicking menu item
+  const handleMenuClick = () => {
+    if (isMobile && !collapsed) {
+      onCollapse(true);
+    }
+  };
 
   return (
-    <Sider
-      theme="light"
-      className="h-screen"
-      style={{
-        borderRight: "1px solid #ddd",
-        position: "sticky",
-        top: 0,
-        bottom: 0,
-        left: 0,
-      }}
-      width={230}
-    >
-      <div className="flex flex-col w-full justify-between h-full overflow-x-hidden overflow-y-auto">
-        <div className="space-y-3">
-          <Link to={"/"} className="flex w-full items-center ml-2 py-2">
-            <div className="w-[52px] h-[52px]">
-              <img src={Logo} alt="" />
-            </div>
-            <p className="text-primary font-bold text-lg">
-              {appName.appConstantname}
-            </p>
-          </Link>
-          <Menu
-            items={items}
-            mode="inline"
-            defaultSelectedKeys={[pathName]}
-            defaultOpenKeys={[keyOpen]}
-            selectedKeys={[pathName, keyOpen]}
-          />
-        </div>
-        <div className="w-full px-2 mb-2">
+    <>
+      {/* Mobile Backdrop */}
+      {isMobile && !collapsed && (
+        <div
+          className="fixed inset-0 bg-black opacity-50 z-50 lg:hidden"
+          onClick={() => onCollapse(true)}
+        />
+      )}
+
+      <Sider
+        theme="light"
+        collapsible
+        collapsed={collapsed}
+        onCollapse={onCollapse}
+        trigger={null} // We'll use custom trigger in header
+        className={`h-screen shadow-lg transition-all duration-300 ${
+          isMobile ? "fixed z-50 lg:relative" : "sticky top-0"
+        }`}
+        style={{
+          position: isMobile ? "fixed" : "sticky",
+          borderRight: "1px solid #e5e7eb",
+          top: 0,
+          bottom: 0,
+          left: isMobile && collapsed ? -250 : 0,
+          zIndex: isMobile ? 100 : 50,
+          transform: isMobile
+            ? collapsed
+              ? "translateX(-100%)"
+              : "translateX(0)"
+            : "none",
+        }}
+        width={250}
+        collapsedWidth={isMobile ? 0 : 80}
+        breakpoint="lg"
+        onBreakpoint={(broken) => {
+          setIsMobile(broken);
+          if (broken) {
+            onCollapse(true);
+          }
+        }}
+      >
+        <div className="flex flex-col w-full h-full">
           <div
-            className="flex items-center rounded-lg cursor-pointer transition-color duration-400 gap-2 py-3 px-7 hover:bg-[#fcede6] hover:text-[#f15e2b]"
-            style={{
-              backgroundColor: pathName === "/setting" ? "#fcede6" : "",
-              color: pathName === "/setting" ? "#f1522b" : "",
-            }}
-            onClick={() => {
-              navigate("/setting");
-            }}
+            className={`p-4 border-b border-gray-100 ${
+              collapsed ? "px-2" : ""
+            }`}
           >
-            <IoSettingsOutline size={20} />
-            <p className="font-medium opacity-80">Settings</p>
+            <Link
+              to={"/"}
+              className="flex items-center space-x-3 group transition-all duration-200"
+            >
+              <div className="w-12 h-12 rounded-xl overflow-hidden p-1.5 shadow-md group-hover:shadow-lg transition-shadow">
+                <img
+                  src={Logo}
+                  alt="Logo"
+                  className="w-full h-full object-contain rounded-lg bg-white"
+                />
+              </div>
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-gray-900 font-bold text-lg truncate group-hover:text-blue-600 transition-colors">
+                    {appName.appConstantname}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate font-medium">
+                    Admin Panel
+                  </p>
+                </div>
+              )}
+            </Link>
+          </div>
+
+          {/* Menu Section */}
+          <div className="flex-1 overflow-y-auto py-2">
+            <Menu
+              items={items}
+              mode="inline"
+              defaultSelectedKeys={[pathName]}
+              defaultOpenKeys={collapsed ? [] : [keyOpen]}
+              selectedKeys={[pathName]}
+              onClick={handleMenuClick}
+              className="border-none"
+              inlineCollapsed={collapsed}
+              style={{
+                backgroundColor: "transparent",
+              }}
+            />
+          </div>
+
+          {/* Settings Section */}
+          <div
+            className={`p-4 border-t border-gray-100 ${
+              collapsed ? "px-2" : ""
+            }`}
+          >
+            <div
+              className={`
+              flex items-center rounded-xl cursor-pointer transition-all duration-200 
+              gap-3 py-3 px-4 group relative
+              ${collapsed ? "justify-center px-2" : ""}
+              ${
+                pathName === "/setting"
+                  ? "bg-blue-50 text-blue-600 shadow-sm border border-blue-100"
+                  : "hover:bg-gray-50 text-gray-700 hover:shadow-sm"
+              }
+            `}
+              onClick={() => navigate("/setting")}
+              title={collapsed ? "Settings" : ""}
+            >
+              <IoSettingsOutline
+                size={20}
+                className={`transition-all duration-200 group-hover:rotate-45 ${
+                  pathName === "/setting" ? "text-blue-600" : "text-gray-500"
+                }`}
+              />
+              {!collapsed && (
+                <>
+                  <span className="font-medium text-sm">Settings</span>
+                  {pathName === "/setting" && (
+                    <div className="absolute right-2 w-2 h-2 bg-blue-500 rounded-full"></div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </Sider>
+      </Sider>
+    </>
   );
 };
 

@@ -105,6 +105,7 @@ const TopSellAndLowStock = () => {
                 },
               },
             ]}
+            scroll={{ x: "100%" }}
             pagination={{
               pageSize: 3,
               hideOnSinglePage: true,

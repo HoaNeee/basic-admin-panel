@@ -3,7 +3,7 @@ import queryString from "query-string";
 import { appName } from "../constants/appName";
 
 export const DOMAIN = "https://api.kakrist.site";
-// const NEW_BASE_URL = `https://api.kakrist.site/admin`;
+// export const DOMAIN = "http://localhost:3001";
 
 const BASE_URL = `${DOMAIN}/admin`;
 

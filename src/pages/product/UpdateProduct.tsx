@@ -450,8 +450,8 @@ const UpdateProduct = () => {
           layout="vertical"
           size="large"
         >
-          <div className="w-full h-full flex gap-5">
-            <div className="w-3/5">
+          <div className="w-full h-full flex gap-5 md:flex-row flex-col">
+            <div className="md:w-3/5 w-full">
               <Form.Item label="Title" name={"title"} rules={rules}>
                 <Input allowClear placeholder="Enter title" />
               </Form.Item>
@@ -879,7 +879,7 @@ const UpdateProduct = () => {
                             children: (
                               <div>
                                 <Card style={{ borderRadius: 0 }}>
-                                  <div className="flex items-center justify-between">
+                                  <div className="flex items-center justify-between md:flex-row flex-col gap-2">
                                     <UploadImagePreview
                                       onChange={(props) => {
                                         const { fileList } = props;
@@ -900,7 +900,7 @@ const UpdateProduct = () => {
                                       }
                                     />
 
-                                    <div className="w-3/5 flex flex-col gap-2">
+                                    <div className="md:w-3/5 flex flex-col gap-2">
                                       <div className="w-full flex flex-col gap-1">
                                         <label className="text-sm">SKU: </label>
                                         <Input
@@ -921,7 +921,7 @@ const UpdateProduct = () => {
                                           }}
                                         />
                                       </div>
-                                      <div className="w-full flex items-center gap-3">
+                                      <div className="w-full flex items-center gap-3 md:flex-row flex-col">
                                         <div className="flex flex-col w-full gap-1">
                                           <label className="text-sm">
                                             Stock:{" "}
@@ -971,7 +971,7 @@ const UpdateProduct = () => {
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="flex gap-3 w-full mt-6">
+                                  <div className="flex gap-3 w-full mt-6 md:flex-row flex-col">
                                     <div className="w-full">
                                       <label>Price: </label>
                                       <Input

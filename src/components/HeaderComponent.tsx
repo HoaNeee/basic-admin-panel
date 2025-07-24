@@ -7,6 +7,7 @@ import {
   notification,
   Popover,
   Space,
+  Button,
 } from "antd";
 import { Header } from "antd/es/layout/layout";
 import { IoSearchOutline } from "react-icons/io5";
@@ -16,7 +17,11 @@ import { RxExit } from "react-icons/rx";
 import { useDispatch, useSelector } from "react-redux";
 import { removeAuth } from "../redux/reducers/authReducer";
 import AVATARDEFAULT from "../assets/avatarNotFound.jpg";
-import { BellOutlined } from "@ant-design/icons";
+import {
+  BellOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+} from "@ant-design/icons";
 import type { RootState } from "../redux/store";
 import { useEffect, useState } from "react";
 import { handleAPI } from "../apis/request";
@@ -24,7 +29,15 @@ import NotificationComponent from "./NotificationComponent";
 import type { NotificationModel } from "../models/notificationModel";
 import { socket } from "../socket/socket";
 
-const HeaderComponent = () => {
+interface HeaderComponentProps {
+  collapsed: boolean;
+  onCollapse: (collapsed: boolean) => void;
+}
+
+const HeaderComponent: React.FC<HeaderComponentProps> = ({
+  collapsed,
+  onCollapse,
+}) => {
   const [notifications, setNotifications] = useState<NotificationModel[]>([]);
   const [readLength, setReadLength] = useState(0);
 
@@ -45,8 +58,8 @@ const HeaderComponent = () => {
 
   useEffect(() => {
     socket.on("SERVER_RETURN_NEW_ORDER", (data) => {
-      setReadLength(readLength + 1);
-      setNotifications([...notifications, data]);
+      setReadLength((prev) => prev + 1);
+      setNotifications((prev) => [...prev, data]);
       api.info({
         message: "Notification",
         description: data.message,
@@ -63,7 +76,7 @@ const HeaderComponent = () => {
     return () => {
       socket.off("SERVER_RETURN_NEW_ORDER");
     };
-  }, []);
+  }, [api, navigate]);
 
   const getNotification = async () => {
     try {
@@ -85,17 +98,35 @@ const HeaderComponent = () => {
           backgroundColor: "white",
           position: "sticky",
           top: 0,
-          zIndex: 30,
+          padding: "0 16px 0 0",
+          zIndex: 200,
           width: "100%",
+          borderBottom: "1px solid #e5e7eb",
+          boxShadow:
+            "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
         }}
+        className=""
       >
-        <Flex justify="space-between">
-          <div className="w-1/3">
-            <Input
-              prefix={<IoSearchOutline />}
-              placeholder="Search product, supplier, order"
+        <Flex justify="space-between" align="center" className="w-full">
+          <div className="flex items-center gap-2 lg:gap-4 flex-1">
+            {/* Collapse Button */}
+            <Button
+              type="text"
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => onCollapse(!collapsed)}
+              className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 flex-shrink-0"
               size="large"
             />
+
+            {/* Search Input */}
+            <div className="flex-1 max-w-56 sm:max-w-lg">
+              <Input
+                prefix={<IoSearchOutline />}
+                placeholder="Search..."
+                size="large"
+                className="shadow-sm w-full"
+              />
+            </div>
           </div>
           <Space size={33}>
             <div className="relative w-fit h-fit">
@@ -110,7 +141,7 @@ const HeaderComponent = () => {
                   forceRender
                   content={
                     <div
-                      className={`w-96  ${
+                      className={`lg:w-96 w-70 bg-white  ${
                         notifications.length > 0
                           ? "h-90 overflow-hidden"
                           : "min-h-80"

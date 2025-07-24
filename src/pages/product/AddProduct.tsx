@@ -76,7 +76,6 @@ const AddProduct = () => {
 
   const navigate = useNavigate();
 
-  const [mesApi, contextHolderMes] = message.useMessage();
   const [form] = Form.useForm();
   const editorRef = useRef<any>(null);
   const { token } = theme.useToken();
@@ -91,7 +90,7 @@ const AddProduct = () => {
         await getVariations();
       } catch (error: any) {
         console.log(error);
-        mesApi.error(error.message);
+        message.error(error.message);
       } finally {
         setIsLoading(false);
       }
@@ -168,10 +167,10 @@ const AddProduct = () => {
 
       const response: any = await handleAPI(api, payload, "post");
       navigate(`/inventories/edit-product/${response.data._id}`);
-      message.success(response.message, 3000);
+      message.success(response.message, 3);
     } catch (error: any) {
       console.log(error);
-      mesApi.error(error.message);
+      message.error(error.message);
     } finally {
       setIsCreating(false);
     }
@@ -228,7 +227,7 @@ const AddProduct = () => {
 
       return response.data;
     } catch (error: any) {
-      mesApi.error(error.message);
+      message.error(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -244,7 +243,7 @@ const AddProduct = () => {
       listVariationChoosed.length !== listVariationOptionChoosed.length ||
       listVariationOptionChoosed.some((it) => it?.options?.length === 0)
     ) {
-      mesApi.error(
+      message.error(
         "Please choose at least one option or delete variation empty!"
       );
       return;
@@ -286,13 +285,8 @@ const AddProduct = () => {
 
   return (
     <>
-      {contextHolderMes}
       <div className="h-full w-full relative p-3 pb-8">
-        {(isLoading || isCreating) && (
-          <>
-            <Loading type="screen" />
-          </>
-        )}
+        {(isLoading || isCreating) && <Loading type="screen" />}
         <h3 className="mb-3 text-2xl font-semibold">Add Product</h3>
         <Form
           name="Add-product"
@@ -301,8 +295,8 @@ const AddProduct = () => {
           layout="vertical"
           size="large"
         >
-          <div className="w-full h-full flex gap-5">
-            <div className="w-3/5">
+          <div className="w-full h-full flex gap-5 md:flex-row flex-col">
+            <div className="md:w-3/5 w-full">
               <Form.Item label="Title" name={"title"} rules={rules}>
                 <Input allowClear placeholder="Enter title" name="title" />
               </Form.Item>
@@ -543,7 +537,7 @@ const AddProduct = () => {
                             ...listVariationChoosed.map((it) => it.key),
                           ]);
                           if (set.has(value)) {
-                            mesApi.error("Already existing option!");
+                            message.error("Already existing option!");
                           } else {
                             const data = await getVariationOptions(value);
                             setListVariationChoosed([
@@ -752,28 +746,7 @@ const AddProduct = () => {
                             children: (
                               <div>
                                 <Card style={{ borderRadius: 0 }}>
-                                  <div className="flex justify-between items-center">
-                                    {/* <Upload
-                                      maxCount={1}
-                                      listType="picture-card"
-                                      onChange={(props) => {
-                                        const { fileList } = props;
-
-                                        const items = [...subProducts];
-                                        const idx = items.findIndex(
-                                          (el) => el.key_combi === key_combi
-                                        );
-                                        if (idx !== -1) {
-                                          items[idx].thumbnail =
-                                            fileList[0]?.originFileObj || "";
-                                          setSubProducts(items);
-                                        }
-                                      }}
-                                      customRequest={customRequest}
-                                      onPreview={() => {}}
-                                    >
-                                      {renderButtonUpload()}
-                                    </Upload> */}
+                                  <div className="flex justify-between items-center md:flex-row flex-col gap-3">
                                     <UploadImagePreview
                                       maxCount={1}
                                       multiple
@@ -791,7 +764,7 @@ const AddProduct = () => {
                                         }
                                       }}
                                     />
-                                    <div className="w-3/5 flex flex-col gap-2">
+                                    <div className="md:w-3/5 flex flex-col gap-2">
                                       <div className="w-full">
                                         <label className="text-sm">SKU: </label>
                                         <Input
@@ -812,7 +785,7 @@ const AddProduct = () => {
                                           }}
                                         />
                                       </div>
-                                      <div className="w-full flex items-center gap-3">
+                                      <div className="w-full flex items-center gap-3 md:flex-row flex-col">
                                         <div className="flex flex-col gap-0 w-full">
                                           <label className="text-sm">
                                             Stock:{" "}
@@ -862,7 +835,7 @@ const AddProduct = () => {
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="flex gap-3 w-full mt-6">
+                                  <div className="flex gap-3 md:flex-row flex-col w-full mt-6">
                                     <div className="w-full">
                                       <label>Price: </label>
                                       <Input
@@ -935,7 +908,7 @@ const AddProduct = () => {
       <ModalCategory
         isOpen={openModalAddCategory}
         onClose={hideModalCategory}
-        mesApi={mesApi}
+        mesApi={message}
         categories={categories}
         onFetch={getCategories}
       />
@@ -943,7 +916,7 @@ const AddProduct = () => {
       <ModalVariationOption
         isOpen={openModalAddVariationOption}
         onClose={hideModalVariationOption}
-        mesApi={mesApi}
+        mesApi={message}
         onAddNew={async () => {
           if (variationSelected) {
             const data = await getVariationOptions(variationSelected?._id);

@@ -54,26 +54,32 @@ const NotificationComponent = (props: Props) => {
                     className="w-full h-full object-contain"
                   />
                 </div>
-                <div className="text-sm space-y-0.5">
-                  <p className="font-bold">{item.title}</p>
+                <div className="flex-1 flex md:items-center justify-between md:flex-row flex-col">
+                  <div className="text-sm space-y-0.5">
+                    <p className="font-bold">{item.title}</p>
+                    <p
+                      className={`${
+                        item.isRead ? "text-gray-400" : "text-gray-600"
+                      } max-w-50`}
+                    >
+                      {item.body}
+                    </p>
+                  </div>
                   <p
-                    className={`${
+                    className={`text-xs mt-2 ${
                       item.isRead ? "text-gray-400" : "text-gray-600"
-                    } max-w-50`}
+                    }`}
                   >
-                    {item.body}
+                    {formatDistanceStrict(
+                      new Date(item.createdAt),
+                      new Date(),
+                      {
+                        addSuffix: true,
+                      }
+                    )}
                   </p>
                 </div>
               </div>
-              <p
-                className={`text-xs mt-2 ${
-                  item.isRead ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
-                {formatDistanceStrict(new Date(item.createdAt), new Date(), {
-                  addSuffix: true,
-                })}
-              </p>
             </div>
             {!item.isRead && (
               <div className="w-1.5 h-1.5 bg-red-600 rounded-full top-1.5 left-1.5 absolute" />

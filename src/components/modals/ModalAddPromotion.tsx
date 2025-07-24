@@ -18,6 +18,7 @@ import { handleAPI, uploadImage } from "../../apis/request";
 import type { PromotionModel } from "../../models/promotionModel";
 import dayjs from "dayjs";
 import UploadImagePreview from "../UploadImagePreview";
+import { colorArray } from "../../constants/appColor";
 
 interface Props {
   isOpen: boolean;
@@ -135,14 +136,6 @@ const ModalAddPromotion = (props: Props) => {
         layout="vertical"
         size="large"
       >
-        <div className="my-2">
-          <UploadImagePreview
-            multiple
-            maxCount={1}
-            fileList={files}
-            onChange={handleChangeImage}
-          />
-        </div>
         <Form.Item label="Title" name={"title"} rules={rules}>
           <Input placeholder="Enter title" />
         </Form.Item>
@@ -215,6 +208,55 @@ const ModalAddPromotion = (props: Props) => {
             <DatePicker showTime size="middle" />
           </Form.Item>
         </Flex>
+        <div className="my-2 flex items-center gap-2">
+          <div className="w-1/3">
+            <UploadImagePreview
+              multiple
+              maxCount={1}
+              fileList={files}
+              onChange={handleChangeImage}
+            />
+          </div>
+          <div className="flex-1 flex flex-col gap-0">
+            <Form.Item
+              label="Color Text"
+              name="colorText"
+              className=""
+              style={{ marginBottom: 3 }}
+            >
+              <Select
+                size="middle"
+                options={colorArray.map((color) => ({
+                  value: color,
+                  label: color,
+                }))}
+                optionRender={(option) => (
+                  <p style={{ color: String(option?.value) || "black" }}>
+                    {option.label}
+                  </p>
+                )}
+                placeholder="Select color text"
+                allowClear
+              />
+            </Form.Item>
+            <Form.Item label="Color Background" name="colorBackground">
+              <Select
+                size="middle"
+                options={colorArray.map((color) => ({
+                  value: color,
+                  label: color,
+                }))}
+                placeholder="Select color background"
+                allowClear
+                optionRender={(option) => (
+                  <p style={{ color: String(option?.value) || "black" }}>
+                    {option.label}
+                  </p>
+                )}
+              />
+            </Form.Item>
+          </div>
+        </div>
       </Form>
     </Modal>
   );
