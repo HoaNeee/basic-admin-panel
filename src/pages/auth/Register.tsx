@@ -49,7 +49,7 @@ const Register = () => {
         <h3 className="text-3xl font-semibold">Create an account</h3>
         <p className="text-gray-500">Start your 30-day free trial.</p>
       </div>
-      <div className="w-4/7 mt-4">
+      <div className="md:w-4/7 w-full mt-4">
         <div>
           <Form
             name="login"

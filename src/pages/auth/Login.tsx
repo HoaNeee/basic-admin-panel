@@ -64,7 +64,7 @@ const Login = () => {
             Welcome back! Please enter your details.
           </p>
         </div>
-        <div className="w-4/7 mt-4">
+        <div className="md:w-4/7 w-full  mt-4">
           <div>
             <Form
               name="login"
@@ -110,7 +110,7 @@ const Login = () => {
           <p className="text-center mt-3 text-gray-400">
             Don't have an account?{" "}
             <Link to={"/register"} className="text-primary">
-              Sign up
+              Sign up (test)
             </Link>
           </p>
         </div>
