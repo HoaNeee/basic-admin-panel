@@ -14,6 +14,7 @@ import { RiDiscountPercentLine } from "react-icons/ri";
 import { PiUsersThree } from "react-icons/pi";
 import { IoSettingsOutline } from "react-icons/io5";
 import React, { useEffect, useState } from "react";
+import { ImBlog } from "react-icons/im";
 
 // Component props interface
 interface SiderComponentProps {
@@ -164,6 +165,15 @@ const items: MenuProps["items"] = [
       </Link>
     ),
     icon: <MdOutlineRateReview size={20} />,
+  },
+  {
+    key: "/blogs",
+    label: (
+      <Link to={"/blogs"} className="font-medium">
+        Blogs
+      </Link>
+    ),
+    icon: <ImBlog size={20} />,
   },
 ];
 

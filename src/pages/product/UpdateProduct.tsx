@@ -126,6 +126,8 @@ const UpdateProduct = () => {
       data[key] = values[key] || "";
     }
 
+    data.stock = values.stock || 0;
+
     data.content = content;
     data.productType = productType;
 
@@ -486,6 +488,7 @@ const UpdateProduct = () => {
                       type="number"
                       placeholder="Enter stock"
                       style={{ width: "100%" }}
+                      name="stock"
                     />
                   </Form.Item>
                 </div>

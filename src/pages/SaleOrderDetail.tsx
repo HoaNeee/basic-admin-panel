@@ -156,8 +156,9 @@ const SaleOrderDetail = () => {
     try {
       setIsUpdating(true);
       await handleChangeStatusCall(order_id, payload);
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
+      messApi.error(error.message || "An error occurred");
     } finally {
       setIsUpdating(false);
     }
@@ -167,7 +168,7 @@ const SaleOrderDetail = () => {
     order_id: string,
     payload: {
       status: string;
-      resonCancel?: string;
+      reasonCancel?: string;
       canceledBy?: string;
     }
   ) => {
@@ -507,7 +508,7 @@ const SaleOrderDetail = () => {
               setIsUpdating(true);
               await handleChangeStatusCall(orderDetail._id, {
                 status: "canceled",
-                resonCancel: reason,
+                reasonCancel: reason,
                 canceledBy: "admin",
               });
               setOpenModalReason(false);

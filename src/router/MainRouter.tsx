@@ -19,6 +19,8 @@ import Reviews from "../pages/Reviews";
 import Setting from "../pages/Setting";
 import Profile from "../pages/Profile";
 import SaleOrderDetail from "../pages/SaleOrderDetail";
+import Blogs from "../pages/Blogs";
+import WriteBlog from "../pages/blog/WriteBlog";
 
 const MainRouter = () => {
   return (
@@ -51,6 +53,10 @@ const MainRouter = () => {
           <Route element={<Customers />} path="customers" />
           <Route element={<Reviews />} path="reviews" />
           <Route path="profile" element={<Profile />} />
+          <Route path="blogs">
+            <Route index element={<Blogs />} />
+            <Route path="write" element={<WriteBlog />} />
+          </Route>
 
           <Route element={<Setting />} path="setting" />
         </Route>
