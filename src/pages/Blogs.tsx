@@ -331,47 +331,40 @@ const Blogs: React.FC = () => {
       {contextHolder}
       <div className="p-6">
         {/* Stats Cards */}
-        <Row gutter={16} className="mb-6">
-          <Col span={6}>
-            <Card>
-              <Statistic
-                title="Total Blogs"
-                value={stats.total}
-                prefix={<FileTextOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card>
-              <Statistic
-                title="Published"
-                value={stats.published}
-                valueStyle={{ color: "#52c41a" }}
-                prefix={<CheckCircleOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card>
-              <Statistic
-                title="Drafts"
-                value={stats.draft}
-                valueStyle={{ color: "#faad14" }}
-                prefix={<ClockCircleOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card>
-              <Statistic
-                title="Total Read Time"
-                value={stats.totalReadTime}
-                suffix="min"
-                prefix={<ClockCircleOutlined />}
-              />
-            </Card>
-          </Col>
-        </Row>
+
+        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <Statistic
+              title="Total Blogs"
+              value={stats.total}
+              prefix={<FileTextOutlined />}
+            />
+          </Card>
+          <Card>
+            <Statistic
+              title="Published"
+              value={stats.published}
+              valueStyle={{ color: "#52c41a" }}
+              prefix={<CheckCircleOutlined />}
+            />
+          </Card>
+          <Card>
+            <Statistic
+              title="Drafts"
+              value={stats.draft}
+              valueStyle={{ color: "#faad14" }}
+              prefix={<ClockCircleOutlined />}
+            />
+          </Card>
+          <Card>
+            <Statistic
+              title="Total Read Time"
+              value={stats.totalReadTime}
+              suffix="min"
+              prefix={<ClockCircleOutlined />}
+            />
+          </Card>
+        </div>
 
         {/* Main Content */}
         <Card
@@ -386,15 +379,15 @@ const Blogs: React.FC = () => {
         >
           {/* Filters */}
           <div className="mb-4">
-            <Row gutter={16}>
-              <Col span={12}>
+            <Row gutter={[16, 16]}>
+              <Col lg={12} md={16} sm={24}>
                 <Search
                   placeholder="Search blogs by title, content, or tags..."
                   onSearch={(value) => setSearchText(value)}
                   allowClear
                 />
               </Col>
-              <Col span={6}>
+              <Col lg={6} md={8} sm={24}>
                 <Select
                   placeholder="Filter by status"
                   value={statusFilter}
@@ -468,7 +461,7 @@ const Blogs: React.FC = () => {
                 setLimit(pageSize);
               },
             }}
-            scroll={{ x: 1200 }}
+            scroll={{ x: 800, y: 500 }}
           />
         </Card>
       </div>

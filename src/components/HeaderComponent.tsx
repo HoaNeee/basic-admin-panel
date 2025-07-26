@@ -93,20 +93,7 @@ const HeaderComponent: React.FC<HeaderComponentProps> = ({
   return (
     <>
       {contextHolder}
-      <Header
-        style={{
-          backgroundColor: "white",
-          position: "sticky",
-          top: 0,
-          padding: "0 16px 0 0",
-          zIndex: 200,
-          width: "100%",
-          borderBottom: "1px solid #e5e7eb",
-          boxShadow:
-            "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
-        }}
-        className=""
-      >
+      <Header className="header-component">
         <Flex justify="space-between" align="center" className="w-full">
           <div className="flex items-center gap-2 lg:gap-4 flex-1">
             {/* Collapse Button */}

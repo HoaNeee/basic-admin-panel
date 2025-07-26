@@ -134,16 +134,9 @@ const SaleOrders = () => {
         const fullName = `${value?.firstName || ""} ${
           value?.lastName || ""
         }`.trim();
-        const initials =
-          (value?.firstName?.[0] || "") + (value?.lastName?.[0] || "");
 
         return (
           <div className="flex items-center">
-            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
-              <span className="text-sm font-medium text-green-600">
-                {initials}
-              </span>
-            </div>
             <div>
               <p className="font-medium text-gray-900">
                 {fullName || "Anonymous"}
@@ -561,7 +554,7 @@ const SaleOrders = () => {
               }}
               className="border-none"
               scroll={{
-                x: "100%",
+                x: 800,
                 y: "calc(100vh - 300px)",
               }}
               locale={{

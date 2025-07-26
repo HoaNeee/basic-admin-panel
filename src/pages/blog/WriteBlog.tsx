@@ -14,11 +14,13 @@ import {
   Col,
   Space,
   Divider,
+  Popconfirm,
 } from "antd";
 import {
   ArrowLeftOutlined,
   SaveOutlined,
   EyeOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import TextArea from "antd/es/input/TextArea";
 import { handleAPI, uploadImage } from "../../apis/request";
@@ -26,8 +28,6 @@ import UploadImagePreview from "../../components/UploadImagePreview";
 import { useLocation, useNavigate } from "react-router";
 import { Editor } from "@tinymce/tinymce-react";
 import Loading from "../../components/Loading";
-
-const { Option } = Select;
 
 interface BlogData {
   user_id?: string;
@@ -221,6 +221,21 @@ const WriteBlog: React.FC = () => {
     messageApi.info("Preview functionality can be implemented here");
   };
 
+  const handleRemoveTagAsync = async (tag: string) => {
+    try {
+      setIsUpdating(true);
+      const api = `/blogs/tags/${tag}`;
+      const response: any = await handleAPI(api, { tag }, "delete");
+      messageApi.success(response.message || "Tag removed successfully");
+      setDataTagSelect(dataTagSelect.filter((item) => item.value !== tag));
+      setTags(tags.filter((t) => t !== tag));
+    } catch (error: any) {
+      messageApi.error("Error removing tag: " + error.message);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <>
       {contextHolder}
@@ -312,7 +327,7 @@ const WriteBlog: React.FC = () => {
                   />
                 </Form.Item>
 
-                <Form.Item label="Content">
+                <Form.Item label="Content" className="">
                   <Editor
                     apiKey={import.meta.env.VITE_API_KEY_EDITOR}
                     onInit={(_evt: any, editor: any) =>
@@ -390,8 +405,8 @@ const WriteBlog: React.FC = () => {
 
                 <Form.Item label="Status" name="status">
                   <Select disabled>
-                    <Option value="draft">Draft</Option>
-                    <Option value="published">Published</Option>
+                    <Select.Option value="draft">Draft</Select.Option>
+                    <Select.Option value="published">Published</Select.Option>
                   </Select>
                 </Form.Item>
               </Card>
@@ -406,8 +421,59 @@ const WriteBlog: React.FC = () => {
                       onChange={(value) => {
                         setInputTag(value);
                       }}
+                      optionRender={(option) => {
+                        const value = option.value || option.label;
+
+                        return (
+                          <div className="flex items-center justify-between">
+                            <p>{option.label}</p>
+                            {!inputTag?.includes(value as string) && (
+                              <Popconfirm
+                                title="Are you sure to delete this tag?"
+                                onConfirm={(e) => {
+                                  e?.stopPropagation();
+                                  handleRemoveTagAsync(value as string);
+                                }}
+                                onCancel={(e) => {
+                                  e?.stopPropagation();
+                                  e?.preventDefault();
+                                }}
+                                okButtonProps={{
+                                  loading: isUpdating,
+                                }}
+                              >
+                                <DeleteOutlined
+                                  className="text-red-500"
+                                  color="red"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                  }}
+                                  style={{
+                                    color: "red",
+                                  }}
+                                />
+                              </Popconfirm>
+                            )}
+                          </div>
+                        );
+                      }}
                       value={inputTag}
                       options={dataTagSelect}
+                      tagRender={(e) => {
+                        return (
+                          <Tag
+                            closable
+                            onClose={() =>
+                              setInputTag(
+                                inputTag?.filter((tag) => tag !== e.value)
+                              )
+                            }
+                          >
+                            {e.value}
+                          </Tag>
+                        );
+                      }}
                       className="w-full"
                     />
                     <Button

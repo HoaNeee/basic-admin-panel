@@ -1,5 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Button, Flex, message, Popconfirm, Space, Table, Tag } from "antd";
+import {
+  Button,
+  Divider,
+  Dropdown,
+  Flex,
+  Input,
+  message,
+  Popconfirm,
+  Space,
+  Table,
+  Tag,
+} from "antd";
 import { useEffect, useState } from "react";
 import ModalAddPromotion from "../components/modals/ModalAddPromotion";
 import { handleAPI } from "../apis/request";
@@ -7,6 +18,7 @@ import type { ColumnProps } from "antd/es/table";
 import type { PromotionModel } from "../models/promotionModel";
 import { FiEdit3 } from "react-icons/fi";
 import { CiTrash } from "react-icons/ci";
+import { IoFilterOutline } from "react-icons/io5";
 
 const Promotions = () => {
   const [openModalAddPromotion, setOpenModalAddPromotion] = useState(false);
@@ -197,49 +209,24 @@ const Promotions = () => {
             )} */}
           </div>
           <Space size={5}>
-            {/* <Input.Search
+            <Input.Search
               placeholder="Enter keyword..."
               onSearch={async (key) => {
-                if (!key && keyword) {
-                  if (isFilter) {
-                    await handleFilter(valueFilter);
-                  } else {
-                    await getProducts();
-                  }
-                }
-                setKeyword(key);
+                console.log(key);
               }}
               allowClear
-            /> */}
-            {/* <Dropdown
+            />
+            <Dropdown
               trigger={["click"]}
               arrow
               placement="bottom"
               popupRender={() => {
-                return (
-                  <FilterProduct
-                    mesApi={mesApi}
-                    values={{
-                      categories: categories,
-                    }}
-                    onFilter={(values: any) => {
-                      setIsFilter(true);
-                      setValueFilter(values);
-                      handleFilter(values);
-                    }}
-                    onClear={async () => {
-                      setIsFilter(false);
-                      if (isFilter) {
-                        await getProducts();
-                      }
-                    }}
-                  />
-                );
+                return <div>Content</div>;
               }}
             >
               <Button icon={<IoFilterOutline size={16} />}>Filters</Button>
-            </Dropdown> */}
-            {/* <Divider type="vertical" /> */}
+            </Dropdown>
+            <Divider type="vertical" />
 
             <Button
               type="primary"
