@@ -4,6 +4,14 @@ export const genCombinations = (data: any[] = []) => {
 
   const combinations: any = [];
 
+  /*
+    option -> 
+    {
+      label: string,
+      value: string
+    }
+  */
+
   const Try = (arr: any[] = [], idx: number, option: any) => {
     for (let i = idx; i < arr.length; i++) {
       const options = [...arr[i].options];
@@ -11,13 +19,7 @@ export const genCombinations = (data: any[] = []) => {
       for (let j = 0; j < options.length; j++) {
         const item = { ...options[j] };
         ans.push(item);
-        /*
-          option -> 
-          {
-            label: string,
-            value: string
-          }
-        */
+
         if (idx === arr.length - 1 && ans.length === arr.length) {
           combinations.push([...ans]);
         }

@@ -2,15 +2,13 @@
 import {
   Button,
   Card,
-  Collapse,
+  Checkbox,
   Divider,
   Form,
   InputNumber,
   message,
-  Popconfirm,
   Select,
   Space,
-  theme,
   TreeSelect,
   type UploadFile,
   type UploadProps,
@@ -28,19 +26,15 @@ import { createTree } from "../../helpers/createTree";
 import type { Supplier } from "../../models/supplier";
 import type { CategoryModel } from "../../models/categoryModel";
 import type { SelectModel } from "../../models/formModel";
-import type {
-  VariationChoosedModel,
-  VariationModel,
-  VariationOptionChoosedModel,
-} from "../../models/variationModel";
-import { TiDelete } from "react-icons/ti";
-import { BiSolidPlusSquare } from "react-icons/bi";
+import type { VariationModel } from "../../models/variationModel";
 import { useNavigate } from "react-router";
-import { genCombinations } from "../../helpers/genCombinations";
 import UploadImage from "../../components/UploadImage";
-import ModalVariationOption from "../../components/modals/ModalVariationOption";
 import type { SubProductModel } from "../../models/productModel";
 import UploadImagePreview from "../../components/UploadImagePreview";
+import ProductVariations from "./ProductVariations";
+import { EyeOutlined } from "@ant-design/icons";
+import { RiRobot2Line } from "react-icons/ri";
+import ModalInput from "../../components/modals/ModalInput";
 
 const AddProduct = () => {
   const [suppliers, setSuppliers] = useState<SelectModel[]>([]);
@@ -53,38 +47,21 @@ const AddProduct = () => {
   const [dataSelectVariation, setDataSelectVariation] = useState<SelectModel[]>(
     []
   );
-
-  const [listVariationChoosed, setListVariationChoosed] = useState<
-    VariationChoosedModel[]
-  >([]);
-
-  const [listVariationOptionChoosed, setListVariationOptionChoosed] = useState<
-    VariationOptionChoosedModel[]
-  >([]);
-
-  const [sampleSubProductVariation, setSampleSubProductVariation] = useState<
-    [SelectModel][]
-  >([]);
-
   const [subProducts, setSubProducts] = useState<SubProductModel[]>([]);
-
   const [albumProduct, setAlbumProduct] = useState<UploadFile[]>([]);
-  const [thumbnail, setThumbnail] = useState<any>();
-  const [openModalAddVariationOption, setOpenModalAddVariationOption] =
-    useState(false);
-  const [variationSelected, setVariationSelected] = useState<VariationModel>();
+  const [thumbnail, setThumbnail] = useState<File>();
+  const [openModalInput, setOpenModalInput] = useState(false);
+  const [dataGenarateVariations, setDataGenarateVariations] = useState<any>();
 
   const navigate = useNavigate();
 
   const [form] = Form.useForm();
   const editorRef = useRef<any>(null);
-  const { token } = theme.useToken();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-
         await getSupplier();
         await getCategories();
         await getVariations();
@@ -98,19 +75,6 @@ const AddProduct = () => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const items = [...dataSelectVariation];
-
-    for (const item of items) {
-      const exist = listVariationChoosed.find((it) => it.key === item.value);
-      if (exist) {
-        item.disabled = true;
-      } else item.disabled = false;
-    }
-
-    setDataSelectVariation(items);
-  }, [listVariationChoosed]);
-
   const handleFinish = async (values: any) => {
     const content = editorRef.current.getContent();
     try {
@@ -120,6 +84,8 @@ const AddProduct = () => {
         if (key === "categories") {
           if (!values[key]) data[key] = [];
           else data[key] = values[key];
+        } else if (key === "createPurchaseOrder") {
+          data[key] = values[key] ? true : false;
         } else {
           data[key] = values[key] || "";
         }
@@ -143,18 +109,38 @@ const AddProduct = () => {
 
       const api = `/products/create`;
 
-      const album = albumProduct.map((item) => item.originFileObj);
+      const album = albumProduct.map((item) => item.originFileObj || item.url);
       if (album && album.length > 0) {
-        const res = await uploadImageMulti("images", album);
-        data.images = res.data;
+        const payload_img = [];
+        const url_string = [];
+        for (const img of album) {
+          if (typeof img === "string") {
+            url_string.push(img);
+          } else {
+            payload_img.push(img);
+          }
+        }
+        const payload = [];
+        if (payload_img.length > 0) {
+          const res = await uploadImageMulti("images", payload_img);
+          payload.push(...res.data);
+        }
+        if (url_string.length > 0) {
+          payload.push(...url_string);
+        }
+        data.images = payload.flat();
       }
       if (thumbnail) {
-        const res = await uploadImage("thumbnail", thumbnail);
-        data.thumbnail = res.data;
+        if (typeof thumbnail === "string") {
+          data.thumbnail = thumbnail;
+        } else {
+          const res = await uploadImage("thumbnail", thumbnail);
+          data.thumbnail = res.data;
+        }
       }
 
       for (const item of items) {
-        if (item?.thumbnail) {
+        if (item.thumbnail && typeof item.thumbnail !== "string") {
           const res = await uploadImage("thumbnail", item.thumbnail);
           item.thumbnail = res.data;
         }
@@ -219,55 +205,6 @@ const AddProduct = () => {
     );
   };
 
-  const getVariationOptions = async (variation_id: string) => {
-    const api = `/variation-options?variation_id=${variation_id}`;
-    try {
-      setIsLoading(true);
-      const response = await handleAPI(api);
-
-      return response.data;
-    } catch (error: any) {
-      message.error(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const findItem = (data: any[] = [], key: string) => {
-    const item = data.find((it) => it._id === key);
-    return item;
-  };
-
-  const handleCreateSubProduct = () => {
-    if (
-      listVariationChoosed.length !== listVariationOptionChoosed.length ||
-      listVariationOptionChoosed.some((it) => it?.options?.length === 0)
-    ) {
-      message.error(
-        "Please choose at least one option or delete variation empty!"
-      );
-      return;
-    }
-    const arr = [...listVariationOptionChoosed];
-
-    const combinations = genCombinations(arr);
-
-    const items = [];
-    for (const item of combinations) {
-      const key = item.map((it: any) => it.value).join("-");
-      items.push({
-        key_combi: key,
-        price: "",
-        stock: "",
-        thumbnail: "",
-        discountedPrice: "",
-      });
-    }
-
-    setSubProducts(items);
-    setSampleSubProductVariation([...combinations]);
-  };
-
   const handleChangeImage: UploadProps["onChange"] = ({
     fileList: newFileList,
   }) => {
@@ -278,16 +215,78 @@ const AddProduct = () => {
     setOpenModalAddCategory(false);
   };
 
-  const hideModalVariationOption = () => {
-    setOpenModalAddVariationOption(false);
-    setVariationSelected(undefined);
+  const handleAIGenerate = async (value: string) => {
+    try {
+      setIsLoading(true);
+      const api = `/ai-assistant/product`;
+      const response = await handleAPI(api, { input: value }, "post");
+      const data = response.data;
+      if (data.title) {
+        form.setFieldsValue({
+          title: data.title,
+          shortDescription: data.shortDescription,
+          categories: data.categories,
+          supplier_id: data.supplier_id,
+          SKU: data.SKU,
+        });
+
+        if (data.price) {
+          form.setFieldsValue({
+            price: data.price,
+            stock: data.stock,
+            cost: data.cost,
+            discountedPrice: data.discountedPrice,
+          });
+        }
+        editorRef.current.setContent(data.content);
+        setProductType(data.productType);
+        setThumbnail(data.thumbnail);
+        setAlbumProduct(
+          data.album.map((item: string) => {
+            return {
+              uid: item,
+              name: item,
+              status: "done",
+              url: item,
+            };
+          })
+        );
+
+        if (data.productType === "variations") {
+          setDataGenarateVariations({
+            variation_ids: data.variation_ids,
+            sub_products: data.sub_products,
+            option_ids: data.options_ids,
+          });
+        }
+      }
+      setOpenModalInput(false);
+    } catch (error) {
+      console.log(error);
+      message.error("Failed to generate content with AI. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <>
       <div className="h-full w-full relative p-3 pb-8">
-        {(isLoading || isCreating) && <Loading type="screen" />}
-        <h3 className="mb-3 text-2xl font-semibold">Add Product</h3>
+        {(isLoading || isCreating) && <Loading type="superScreen" />}
+        <div className="flex items-center justify-between mb-5 rounded-md shadow-sm py-4 px-6 bg-white">
+          <h3 className="text-xl font-semibold">Add Product</h3>
+          <Space wrap={true}>
+            <Button
+              icon={<RiRobot2Line />}
+              onClick={() => setOpenModalInput(true)}
+            >
+              AI Generate
+            </Button>
+            <Button icon={<EyeOutlined />} onClick={() => {}}>
+              Preview
+            </Button>
+          </Space>
+        </div>
         <Form
           name="Add-product"
           onFinish={handleFinish}
@@ -386,44 +385,46 @@ const AddProduct = () => {
                   name="shortDescription"
                 />
               </Form.Item>
-              <Editor
-                apiKey={import.meta.env.VITE_API_KEY_EDITOR}
-                onInit={(_evt: any, editor: any) =>
-                  (editorRef.current = editor)
-                }
-                initialValue={"<p>This is the initial content.</p>"}
-                init={{
-                  height: 350,
-                  menubar: true,
-                  plugins: [
-                    "advlist",
-                    "autolink",
-                    "lists",
-                    "link",
-                    "image",
-                    "charmap",
-                    "preview",
-                    "anchor",
-                    "searchreplace",
-                    "visualblocks",
-                    "code",
-                    "fullscreen",
-                    "insertdatetime",
-                    "media",
-                    "table",
-                    "code",
-                    "help",
-                    "wordcount",
-                  ],
-                  toolbar:
-                    "undo redo | blocks | " +
-                    "bold italic forecolor | alignleft aligncenter " +
-                    "alignright alignjustify | bullist numlist outdent indent | " +
-                    "removeformat | help",
-                  content_style:
-                    "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
-                }}
-              />
+              <div>
+                <p className="mb-2">Content</p>
+                <Editor
+                  apiKey={import.meta.env.VITE_API_KEY_EDITOR}
+                  onInit={(_evt: any, editor: any) =>
+                    (editorRef.current = editor)
+                  }
+                  init={{
+                    height: 350,
+                    menubar: true,
+                    plugins: [
+                      "advlist",
+                      "autolink",
+                      "lists",
+                      "link",
+                      "image",
+                      "charmap",
+                      "preview",
+                      "anchor",
+                      "searchreplace",
+                      "visualblocks",
+                      "code",
+                      "fullscreen",
+                      "insertdatetime",
+                      "media",
+                      "table",
+                      "code",
+                      "help",
+                      "wordcount",
+                    ],
+                    toolbar:
+                      "undo redo | blocks | " +
+                      "bold italic forecolor | alignleft aligncenter " +
+                      "alignright alignjustify | bullist numlist outdent indent | " +
+                      "removeformat | help",
+                    content_style:
+                      "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+                  }}
+                />
+              </div>
             </div>
             <div className="flex-1 mt-4 flex flex-col gap-5">
               <Card size="small">
@@ -492,9 +493,15 @@ const AddProduct = () => {
                   />
                 </Form.Item>
               </Card>
-              <Card title="Thumbail" size="small">
+              <Card title="Thumbnail" size="small">
                 <UploadImage
-                  file={thumbnail ? URL.createObjectURL(thumbnail) : undefined}
+                  file={
+                    thumbnail
+                      ? typeof thumbnail === "string"
+                        ? thumbnail
+                        : URL.createObjectURL(thumbnail)
+                      : undefined
+                  }
                   onDelete={() => setThumbnail(undefined)}
                   onChange={(e) => {
                     if (e.target.files) {
@@ -504,403 +511,37 @@ const AddProduct = () => {
                 />
               </Card>
 
-              <Card title="Ablum" size="small">
+              <Card title="Album" size="small">
                 <UploadImagePreview
                   multiple
                   fileList={albumProduct}
                   onChange={handleChangeImage}
                 />
               </Card>
+
+              <Card style={{ padding: 0 }} size="small">
+                <Form.Item name={"createPurchaseOrder"} style={{ margin: 0 }}>
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="createPurchaseOrder" />
+                    <label htmlFor="createPurchaseOrder">
+                      Create Purchase Order for this product
+                    </label>
+                  </div>
+                </Form.Item>
+              </Card>
             </div>
           </div>
           {productType === "variations" && (
-            <div className="mt-3">
-              <Card
-                title={
-                  <div className=" flex gap-4 items-center">
-                    <p>Variations</p>
-                    <div className="w-full">
-                      <Select
-                        value={""}
-                        size="middle"
-                        options={[
-                          {
-                            label: "Add variation",
-                            value: "",
-                            disabled: true,
-                          },
-                          ...dataSelectVariation,
-                        ]}
-                        placeholder="Add variation"
-                        onChange={async (value) => {
-                          const set = new Set([
-                            ...listVariationChoosed.map((it) => it.key),
-                          ]);
-                          if (set.has(value)) {
-                            message.error("Already existing option!");
-                          } else {
-                            const data = await getVariationOptions(value);
-                            setListVariationChoosed([
-                              ...listVariationChoosed,
-                              {
-                                key: value,
-                                select: data.map((item: any) => {
-                                  return {
-                                    label: item.title,
-                                    value: item._id,
-                                  };
-                                }),
-                              },
-                            ]);
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
-                }
-              >
-                <div className="flex flex-col gap-2">
-                  {listVariationChoosed.map((item: VariationChoosedModel) => (
-                    <div key={item.key} className="flex gap-4 items-center">
-                      <div className="rounded border py-1 px-2 border-[#ddd] w-2/12 text-center">
-                        {findItem(variations, item.key)?.title || ""}
-                      </div>
-                      <div className="flex-1 flex gap-2 items-center">
-                        <Form.Item
-                          style={{
-                            width: "80%",
-                            margin: 0,
-                            padding: 0,
-                          }}
-                        >
-                          <Select
-                            optionFilterProp="label"
-                            options={
-                              listVariationChoosed.find(
-                                (it) => it.key === item.key
-                              )?.select || []
-                            }
-                            placeholder="Choose options"
-                            size="middle"
-                            style={{
-                              width: "100%",
-                            }}
-                            mode="tags"
-                            onChange={(_val, option: any) => {
-                              const items = [...listVariationOptionChoosed];
-                              const index = items.findIndex(
-                                (it) => it.key_variation === item.key
-                              );
-
-                              if (index !== -1) {
-                                if (option?.length > 0) {
-                                  items[index].options = option;
-                                } else {
-                                  items.splice(index, 1);
-                                }
-                              } else {
-                                items.push({
-                                  key_variation: item.key,
-                                  title:
-                                    findItem(variations, item.key)?.title ||
-                                    item.key,
-                                  options: option,
-                                });
-                              }
-                              setListVariationOptionChoosed(items);
-                            }}
-                          />
-                        </Form.Item>
-                        <div className="flex gap-1.5 items-center">
-                          <TiDelete
-                            size={20}
-                            color="red"
-                            className="cursor-pointer"
-                            onClick={() => {
-                              setListVariationChoosed(
-                                listVariationChoosed.filter(
-                                  (it) => it.key !== item.key
-                                )
-                              );
-
-                              const index =
-                                listVariationOptionChoosed.findIndex(
-                                  (it) => it.key_variation === item.key
-                                );
-                              if (index !== -1) {
-                                listVariationOptionChoosed.splice(index, 1);
-                              }
-                              setListVariationOptionChoosed(
-                                listVariationOptionChoosed
-                              );
-                            }}
-                            title="Delete this field"
-                          />
-
-                          <BiSolidPlusSquare
-                            size={20}
-                            color={"blue"}
-                            className="cursor-pointer"
-                            title="Add new value"
-                            onClick={() => {
-                              const variation = variations.find(
-                                (it) => it._id === item.key
-                              );
-                              setVariationSelected(variation);
-                              setOpenModalAddVariationOption(true);
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {
-                  <div className="text-right mt-4">
-                    <Button
-                      size="middle"
-                      type="primary"
-                      onClick={handleCreateSubProduct}
-                    >
-                      Create
-                    </Button>
-                  </div>
-                }
-                <div className="mt-5 font-medium">Variations Of Products:</div>
-                {sampleSubProductVariation &&
-                  sampleSubProductVariation.length > 0 && (
-                    <div className="my-4">
-                      <Collapse
-                        bordered={false}
-                        style={{ background: "white" }}
-                        size="middle"
-                        items={sampleSubProductVariation.map((item, index) => {
-                          const label = item
-                            .map((it: any) => it.label)
-                            .join(" - ");
-
-                          const key_combi = item
-                            .map((it: any) => it.value)
-                            .join("-");
-
-                          const it = subProducts.find(
-                            (el) => el.key_combi === key_combi
-                          );
-
-                          return {
-                            key: index,
-                            extra: (
-                              <>
-                                <Popconfirm
-                                  onCancel={(e) => {
-                                    e?.stopPropagation();
-                                  }}
-                                  onConfirm={(e) => {
-                                    e?.stopPropagation();
-                                    const sampleMap = new Map();
-                                    for (const item of sampleSubProductVariation) {
-                                      const key_combi = item
-                                        .map((it: SelectModel) => it.value)
-                                        .join("-");
-                                      sampleMap.set(key_combi, item);
-                                    }
-
-                                    sampleMap.set(key_combi, null);
-
-                                    const items: [SelectModel][] = [];
-                                    sampleMap.forEach((val) => {
-                                      if (val) {
-                                        items.push(val);
-                                      }
-                                    });
-                                    setSubProducts(
-                                      subProducts.filter(
-                                        (it) => it.key_combi !== key_combi
-                                      )
-                                    );
-                                    setSampleSubProductVariation(items);
-                                  }}
-                                  title="Are you sure?"
-                                >
-                                  <Button
-                                    size="small"
-                                    type="link"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                    }}
-                                    style={{ color: "red", fontSize: 12 }}
-                                  >
-                                    Remove
-                                  </Button>
-                                </Popconfirm>
-                              </>
-                            ),
-
-                            label: (
-                              <>
-                                <div className="">
-                                  <p className="font-medium">{label}</p>
-                                </div>
-                              </>
-                            ),
-                            children: (
-                              <div>
-                                <Card style={{ borderRadius: 0 }}>
-                                  <div className="flex justify-between items-center md:flex-row flex-col gap-3">
-                                    <UploadImagePreview
-                                      maxCount={1}
-                                      multiple
-                                      onChange={(props) => {
-                                        const { fileList } = props;
-
-                                        const items = [...subProducts];
-                                        const idx = items.findIndex(
-                                          (el) => el.key_combi === key_combi
-                                        );
-                                        if (idx !== -1) {
-                                          items[idx].thumbnail =
-                                            fileList[0]?.originFileObj || "";
-                                          setSubProducts(items);
-                                        }
-                                      }}
-                                    />
-                                    <div className="md:w-3/5 flex flex-col gap-2">
-                                      <div className="w-full">
-                                        <label className="text-sm">SKU: </label>
-                                        <Input
-                                          size="middle"
-                                          value={it?.SKU}
-                                          placeholder="Enter SKU"
-                                          name="SKU"
-                                          onChange={(e) => {
-                                            const { value } = e.target;
-                                            const items = [...subProducts];
-                                            const idx = items.findIndex(
-                                              (el) => el.key_combi === key_combi
-                                            );
-                                            if (idx !== -1) {
-                                              items[idx]["SKU"] = value;
-                                              setSubProducts(items);
-                                            }
-                                          }}
-                                        />
-                                      </div>
-                                      <div className="w-full flex items-center gap-3 md:flex-row flex-col">
-                                        <div className="flex flex-col gap-0 w-full">
-                                          <label className="text-sm">
-                                            Stock:{" "}
-                                          </label>
-                                          <Input
-                                            size="middle"
-                                            value={it?.stock}
-                                            placeholder="Enter stock"
-                                            name="stock"
-                                            onChange={(e) => {
-                                              const { value } = e.target;
-                                              const items = [...subProducts];
-                                              const idx = items.findIndex(
-                                                (el) =>
-                                                  el.key_combi === key_combi
-                                              );
-                                              if (idx !== -1) {
-                                                items[idx]["stock"] = value;
-                                                setSubProducts(items);
-                                              }
-                                            }}
-                                          />
-                                        </div>
-                                        <div className="flex flex-col gap-0 w-full">
-                                          <label className="text-sm">
-                                            Cost:{" "}
-                                          </label>
-                                          <Input
-                                            size="middle"
-                                            value={it?.cost}
-                                            placeholder="Enter cost"
-                                            name="cost"
-                                            onChange={(e) => {
-                                              const { value } = e.target;
-                                              const items = [...subProducts];
-                                              const idx = items.findIndex(
-                                                (el) =>
-                                                  el.key_combi === key_combi
-                                              );
-                                              if (idx !== -1) {
-                                                items[idx]["cost"] = value;
-                                                setSubProducts(items);
-                                              }
-                                            }}
-                                          />
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-3 md:flex-row flex-col w-full mt-6">
-                                    <div className="w-full">
-                                      <label>Price: </label>
-                                      <Input
-                                        value={it?.price}
-                                        placeholder="Enter Price"
-                                        name="price"
-                                        onChange={(e) => {
-                                          const { value } = e.target;
-                                          const items = [...subProducts];
-                                          const idx = items.findIndex(
-                                            (el) => el.key_combi === key_combi
-                                          );
-                                          if (idx !== -1) {
-                                            items[idx]["price"] = value;
-                                            setSubProducts(items);
-                                          }
-                                        }}
-                                        type="number"
-                                      />
-                                    </div>
-                                    <div className="w-full">
-                                      <label>Discounted Price: </label>
-                                      <Input
-                                        value={it?.discountedPrice}
-                                        placeholder="Enter discounted price"
-                                        name="discountedPrice"
-                                        type="number"
-                                        min={0}
-                                        onChange={(e) => {
-                                          const { value } = e.target;
-                                          const items = [...subProducts];
-                                          const idx = items.findIndex(
-                                            (el) => el.key_combi === key_combi
-                                          );
-                                          if (idx !== -1) {
-                                            items[idx]["discountedPrice"] =
-                                              value;
-                                            setSubProducts(items);
-                                          }
-                                        }}
-                                      />
-                                    </div>
-                                  </div>
-                                </Card>
-                              </div>
-                            ),
-                            style: {
-                              marginBottom: 10,
-                              background: "#f2f0f0",
-                              borderRadius: token.borderRadiusLG,
-                              border: "none",
-                              padding: 0,
-                            },
-                            styles: {
-                              body: {
-                                padding: 0,
-                              },
-                            },
-                          };
-                        })}
-                      />
-                    </div>
-                  )}
-              </Card>
-            </div>
+            <ProductVariations
+              message={message}
+              variations={variations}
+              setIsLoading={setIsLoading}
+              dataSelectVariation={dataSelectVariation}
+              setDataSelectVariation={setDataSelectVariation}
+              subProducts={subProducts}
+              setSubProducts={setSubProducts}
+              dataGenarateVariations={dataGenarateVariations}
+            />
           )}
         </Form>
       </div>
@@ -912,31 +553,13 @@ const AddProduct = () => {
         categories={categories}
         onFetch={getCategories}
       />
-
-      <ModalVariationOption
-        isOpen={openModalAddVariationOption}
-        onClose={hideModalVariationOption}
-        mesApi={message}
-        onAddNew={async () => {
-          if (variationSelected) {
-            const data = await getVariationOptions(variationSelected?._id);
-            const items = [...listVariationChoosed];
-            const idx = items.findIndex(
-              (item) => item.key === variationSelected?._id
-            );
-
-            if (idx !== -1) {
-              items[idx].select = data.map((item: any) => {
-                return {
-                  label: item.title,
-                  value: item._id,
-                };
-              });
-              setListVariationChoosed(items);
-            }
-          }
-        }}
-        variation={variationSelected}
+      <ModalInput
+        open={openModalInput}
+        onOk={(value) => handleAIGenerate(value)}
+        onCancel={() => setOpenModalInput(false)}
+        messageApi={message}
+        title="Ask the AI assistant to help you with writing or editing your product"
+        isLoading={isLoading}
       />
     </>
   );

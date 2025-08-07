@@ -40,6 +40,9 @@ import { genCombinations } from "../../helpers/genCombinations";
 import ModalVariationOption from "../../components/modals/ModalVariationOption";
 import UploadImagePreview from "../../components/UploadImagePreview";
 import UploadImage from "../../components/UploadImage";
+import { EyeOutlined } from "@ant-design/icons";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../redux/store";
 
 interface SelectEdit extends SelectModel {
   sub_product_id?: string;
@@ -82,6 +85,7 @@ const UpdateProduct = () => {
   const { token } = theme.useToken();
   const params = useParams();
   const product_id = params.id;
+  const setting = useSelector((state: RootState) => state.setting.setting);
 
   const navigate = useNavigate();
 
@@ -440,11 +444,24 @@ const UpdateProduct = () => {
       {contextHolderMes}
       <div className="h-full w-full relative p-3 pb-8">
         {(isUpdating || isLoading || !productDetail) && (
-          <>
-            <Loading type="screen" />
-          </>
+          <Loading type="superScreen" />
         )}
-        <h3 className="mb-3 text-2xl font-semibold">Edit Product</h3>
+        <div className="flex items-center justify-between mb-5 rounded-md shadow-sm py-4 px-6 bg-white">
+          <h3 className="text-2xl font-semibold">Edit Product</h3>
+          <Space wrap={true}>
+            <a
+              target="_blank"
+              href={`https://${
+                setting.subdomain.find((item) => item === "shop") || "shop"
+              }.${setting?.domain}/shop/${productDetail?.slug}`}
+            >
+              <Button icon={<EyeOutlined />} onClick={() => {}}>
+                Preview
+              </Button>
+            </a>
+          </Space>
+        </div>
+
         <Form
           name="Edit-product"
           onFinish={handleFinish}
@@ -656,7 +673,7 @@ const UpdateProduct = () => {
             </div>
           </div>
           {productType === "variations" && (
-            <div className="mt-3">
+            <div className="mt-3 flex flex-col gap-3">
               <Card
                 title={
                   <div className=" flex gap-4 items-center">
@@ -804,7 +821,8 @@ const UpdateProduct = () => {
                     ))}
                   </div>
                 }
-                {
+                <div className="flex flex-col gap-2 mt-4 justify-end items-end">
+                  <p>Note when updating variations, your data may be lost</p>
                   <div className="text-right mt-4">
                     <Button
                       size="middle"
@@ -814,7 +832,9 @@ const UpdateProduct = () => {
                       Save Variation
                     </Button>
                   </div>
-                }
+                </div>
+              </Card>
+              <Card>
                 <div className="mt-5 font-medium">Variations Of Products:</div>
                 {sampleSubProductVariation &&
                   sampleSubProductVariation.length > 0 && (
@@ -942,7 +962,8 @@ const UpdateProduct = () => {
                                                   el.key_combi === key_combi
                                               );
                                               if (idx !== -1) {
-                                                items[idx]["stock"] = value;
+                                                items[idx]["stock"] =
+                                                  Number(value);
                                                 setSubProducts(items);
                                               }
                                             }}
@@ -988,7 +1009,7 @@ const UpdateProduct = () => {
                                             (el) => el.key_combi === key_combi
                                           );
                                           if (idx !== -1) {
-                                            items[idx]["price"] = value;
+                                            items[idx]["price"] = Number(value);
                                             setSubProducts(items);
                                           }
                                         }}
@@ -1011,7 +1032,7 @@ const UpdateProduct = () => {
                                           );
                                           if (idx !== -1) {
                                             items[idx]["discountedPrice"] =
-                                              value;
+                                              Number(value);
                                             setSubProducts(items);
                                           }
                                         }}

@@ -2,8 +2,10 @@ import axios from "axios";
 import queryString from "query-string";
 import { appName } from "../constants/appName";
 
-export const DOMAIN = "https://api.kakrist.site";
-// export const DOMAIN = "http://localhost:3001";
+export const DOMAIN =
+  import.meta.env.VITE_ENV === "dev"
+    ? "http://localhost:3001"
+    : "https://api.kakrist.site";
 
 const BASE_URL = `${DOMAIN}/admin`;
 
@@ -71,7 +73,7 @@ axiosClient.interceptors.response.use(
     return response.data;
   },
   (error) => {
-    return Promise.reject(error);
+    return Promise.reject(error?.response?.data || error);
   }
 );
 

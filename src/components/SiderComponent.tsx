@@ -16,7 +16,6 @@ import { IoSettingsOutline } from "react-icons/io5";
 import React, { useEffect, useState } from "react";
 import { ImBlog } from "react-icons/im";
 
-// Component props interface
 interface SiderComponentProps {
   collapsed: boolean;
   onCollapse: (collapsed: boolean) => void;
@@ -204,7 +203,6 @@ const SiderComponent: React.FC<SiderComponentProps> = ({
     pathName.substring(1).substring(0, pathName.substring(1).indexOf("/")) ||
     pathName.substring(1);
 
-  // Handle mobile menu close when clicking menu item
   const handleMenuClick = () => {
     if (isMobile && !collapsed) {
       onCollapse(true);
@@ -213,7 +211,6 @@ const SiderComponent: React.FC<SiderComponentProps> = ({
 
   return (
     <>
-      {/* Mobile Backdrop */}
       {isMobile && !collapsed && (
         <div
           className="fixed inset-0 bg-black opacity-50 z-50 lg:hidden"
@@ -226,7 +223,7 @@ const SiderComponent: React.FC<SiderComponentProps> = ({
         collapsible
         collapsed={collapsed}
         onCollapse={onCollapse}
-        trigger={null} // We'll use custom trigger in header
+        trigger={null}
         className={`h-screen shadow-lg transition-all duration-300 ${
           isMobile ? "fixed z-50 lg:relative" : "sticky top-0"
         }`}
@@ -283,8 +280,18 @@ const SiderComponent: React.FC<SiderComponentProps> = ({
             </Link>
           </div>
 
-          {/* Menu Section */}
-          <div className="flex-1 overflow-y-auto py-2">
+          <div
+            className="flex-1 overflow-y-auto py-2"
+            style={{
+              WebkitScrollSnapType: "y mandatory",
+              scrollSnapType: "y mandatory",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+              scrollbarColor: "#ddd #f0f0f0",
+              overflowY: "auto",
+              overscrollBehavior: "contain",
+            }}
+          >
             <Menu
               items={items}
               mode="inline"
@@ -300,7 +307,6 @@ const SiderComponent: React.FC<SiderComponentProps> = ({
             />
           </div>
 
-          {/* Settings Section */}
           <div
             className={`p-4 border-t border-gray-100 ${
               collapsed ? "px-2" : ""

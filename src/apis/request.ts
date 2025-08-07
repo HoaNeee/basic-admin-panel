@@ -14,9 +14,13 @@ export const handleAPI = async (
   });
 };
 
-export const uploadImage = async (keyName: string, options: any) => {
+export const uploadImage = async (
+  keyName: string,
+  options: any,
+  resize = true
+) => {
   const data: any = {};
-  const newFile = await resizeFile(options);
+  const newFile = resize ? await resizeFile(options) : options;
   data[`${keyName}`] = newFile;
   return await axiosClient.post("/upload", data, {
     headers: {
@@ -45,7 +49,7 @@ const resizeFile = (file: any) =>
       file,
       1024,
       720,
-      "JPEG",
+      "JPEG,PNG",
       80,
       0,
       (uri) => {

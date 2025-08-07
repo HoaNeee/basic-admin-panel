@@ -7,7 +7,7 @@ import { appColor } from "./constants/appColor";
 
 function App() {
   message.config({
-    top: 100,
+    top: 50,
     duration: 2,
     maxCount: 3,
     rtl: true,

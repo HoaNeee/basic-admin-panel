@@ -28,18 +28,9 @@ import UploadImagePreview from "../../components/UploadImagePreview";
 import { useLocation, useNavigate } from "react-router";
 import { Editor } from "@tinymce/tinymce-react";
 import Loading from "../../components/Loading";
-
-interface BlogData {
-  user_id?: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  image?: string;
-  slug?: string;
-  tags: string[];
-  readTime: number;
-  status: string;
-}
+import { RiRobot2Line } from "react-icons/ri";
+import type { BlogModel } from "../../models/blogModel";
+import ModalInput from "../../components/modals/ModalInput";
 
 const WriteBlog: React.FC = () => {
   const [form] = Form.useForm();
@@ -60,6 +51,7 @@ const WriteBlog: React.FC = () => {
     }[]
   >([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [openModalInput, setOpenModalInput] = useState(false);
 
   const params = new URLSearchParams(useLocation().search);
   const blogId = params.get("id");
@@ -164,7 +156,7 @@ const WriteBlog: React.FC = () => {
         return;
       }
 
-      const blogData: BlogData = {
+      const blogData: BlogModel = {
         title: values.title,
         excerpt: values.excerpt,
         content: content,
@@ -173,7 +165,6 @@ const WriteBlog: React.FC = () => {
         status: isDraft ? "draft" : "published",
       };
 
-      // Upload image if exists
       if (imageFile) {
         const uploadResponse = await uploadImage("thumbnail", imageFile);
         blogData.image = uploadResponse.data;
@@ -236,6 +227,38 @@ const WriteBlog: React.FC = () => {
     }
   };
 
+  const handleSubmitAI = async (input: string) => {
+    if (!input || input.trim() === "") {
+      messageApi.error("Input cannot be empty");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setOpenModalInput(false);
+      const response = await handleAPI("/ai-assistant/blog", { input }, "post");
+      const data = response.data;
+      if (data) {
+        form.setFieldsValue({
+          title: data.title,
+          excerpt: data.excerpt,
+          content: data.content,
+          readTime: data.readTime,
+          status: "draft",
+        });
+        setImageUrl(data.image);
+        setTags(data.tags || []);
+        editorRef.current.setContent(data.content);
+        messageApi.success("AI Assistant generated content successfully");
+      }
+      console.log(response);
+    } catch (error: any) {
+      messageApi.error("Error: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <>
       {contextHolder}
@@ -255,6 +278,13 @@ const WriteBlog: React.FC = () => {
         }
         extra={
           <Space>
+            <Button
+              icon={<RiRobot2Line />}
+              onClick={() => setOpenModalInput(true)}
+            >
+              {" "}
+              Assistant with AI{" "}
+            </Button>
             <Button
               icon={<EyeOutlined />}
               onClick={handlePreview}
@@ -283,7 +313,6 @@ const WriteBlog: React.FC = () => {
           }}
         >
           <Row gutter={24}>
-            {/* Left Column - Main Content */}
             <Col xs={24} lg={16}>
               <Card title="Content" className="mb-4">
                 <Form.Item
@@ -371,9 +400,7 @@ const WriteBlog: React.FC = () => {
               </Card>
             </Col>
 
-            {/* Right Column - Metadata & Settings */}
             <Col xs={24} lg={8}>
-              {/* Featured Image */}
               <Card title="Featured Image" className="mb-4">
                 <UploadImagePreview
                   file={imageUrl}
@@ -388,7 +415,6 @@ const WriteBlog: React.FC = () => {
                 />
               </Card>
 
-              {/* Blog Settings */}
               <Card title="Blog Settings" className="mb-4">
                 <Form.Item
                   name="readTime"
@@ -411,7 +437,6 @@ const WriteBlog: React.FC = () => {
                 </Form.Item>
               </Card>
 
-              {/* Tags */}
               <Card title="Tags" className="mb-4">
                 <Space direction="vertical" style={{ width: "100%" }}>
                   <Space.Compact style={{ width: "100%" }}>
@@ -500,7 +525,6 @@ const WriteBlog: React.FC = () => {
                 </Space>
               </Card>
 
-              {/* Actions */}
               <Card>
                 <Space direction="vertical" style={{ width: "100%" }}>
                   <Button
@@ -527,6 +551,15 @@ const WriteBlog: React.FC = () => {
             </Col>
           </Row>
         </Form>
+        <ModalInput
+          open={openModalInput}
+          onOk={(value) => handleSubmitAI(value)}
+          onCancel={() => {
+            setOpenModalInput(false);
+          }}
+          messageApi={messageApi}
+          title="Ask the AI assistant to help you with writing or editing your blog content."
+        />
       </Card>
     </>
   );

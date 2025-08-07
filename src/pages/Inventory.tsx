@@ -60,7 +60,7 @@ const Inventory = () => {
 
   useEffect(() => {
     getCategories();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!isFilter) {
@@ -68,7 +68,7 @@ const Inventory = () => {
     } else {
       handleFilter(valueFilter, keyword);
     }
-  }, [page, limit]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [page, limit]);
 
   useEffect(() => {
     if (isFilter && keyword) {
@@ -80,7 +80,7 @@ const Inventory = () => {
         getProducts(keyword);
       }
     }
-  }, [keyword]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [keyword]);
 
   useEffect(() => {
     if (isFilter) {
@@ -167,12 +167,12 @@ const Inventory = () => {
             content: response.message,
           });
           if (selectedRowKeys.length === products.length) {
-            // setTotalRecord(totalRecord - selectedRowKeys.length);
             setPage(page - 1);
             setSelectedRowKeys([]);
           } else {
             await getProducts();
           }
+          setSelectedRowKeys([]);
         } catch (error: any) {
           mesApi.error(error.message);
         } finally {
@@ -520,7 +520,6 @@ const Inventory = () => {
       {contextHolder}
       {contextHolderModal}
       <div className="min-h-screen bg-gray-50">
-        {/* Page Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

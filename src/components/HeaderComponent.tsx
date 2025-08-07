@@ -96,7 +96,6 @@ const HeaderComponent: React.FC<HeaderComponentProps> = ({
       <Header className="header-component">
         <Flex justify="space-between" align="center" className="w-full">
           <div className="flex items-center gap-2 lg:gap-4 flex-1">
-            {/* Collapse Button */}
             <Button
               type="text"
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -105,7 +104,6 @@ const HeaderComponent: React.FC<HeaderComponentProps> = ({
               size="large"
             />
 
-            {/* Search Input */}
             <div className="flex-1 max-w-56 sm:max-w-lg">
               <Input
                 prefix={<IoSearchOutline />}

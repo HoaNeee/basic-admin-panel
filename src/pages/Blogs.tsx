@@ -78,7 +78,6 @@ const Blogs: React.FC = () => {
         : [];
       setBlogs(blogsData);
 
-      // Calculate stats
       setTotalRecord(response.data.total);
     } catch (error: any) {
       messageApi.error("Error fetching blogs: " + error.message);
@@ -330,8 +329,6 @@ const Blogs: React.FC = () => {
     <>
       {contextHolder}
       <div className="p-6">
-        {/* Stats Cards */}
-
         <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <Statistic
@@ -366,7 +363,6 @@ const Blogs: React.FC = () => {
           </Card>
         </div>
 
-        {/* Main Content */}
         <Card
           title="Blog Management"
           extra={
@@ -377,7 +373,6 @@ const Blogs: React.FC = () => {
             </Link>
           }
         >
-          {/* Filters */}
           <div className="mb-4">
             <Row gutter={[16, 16]}>
               <Col lg={12} md={16} sm={24}>

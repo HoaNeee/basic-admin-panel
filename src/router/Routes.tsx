@@ -5,11 +5,30 @@ import { useDispatch, useSelector } from "react-redux";
 import { addAuth, type AuthState } from "../redux/reducers/authReducer";
 import type { RootState } from "../redux/store";
 import { appName } from "../constants/appName";
+import { handleAPI } from "../apis/request";
+import { addSetting } from "../redux/reducers/settingReducer";
 
 const Routes = () => {
   const auth: AuthState = useSelector((state: RootState) => state.auth.auth);
 
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    getSetting();
+  }, []);
+
+  const getSetting = async () => {
+    try {
+      const api = `/settings`;
+      const response = await handleAPI(api);
+      console.log(response);
+      if (response.data) {
+        dispatch(addSetting(response.data));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
     //logic solve at server
