@@ -343,18 +343,8 @@ const Inventory = () => {
         </div>
       ),
       render: (value: number, record, index) => {
-        if (value !== null && value !== undefined) {
-          if (record.productType !== "variations") {
-            return (
-              <span className="font-semibold text-emerald-600">
-                {VND.format(value)}
-              </span>
-            );
-          }
-          if (
-            record?.rangePrice &&
-            (record.rangePrice.min || record.rangePrice.max)
-          ) {
+        if (record.productType === "variations") {
+          if (record?.rangePrice) {
             return (
               <div className="text-sm">
                 <span className="text-emerald-600 font-medium">
@@ -370,6 +360,12 @@ const Inventory = () => {
           return (
             <span className="text-gray-400">
               <RiSubtractFill key={index} />
+            </span>
+          );
+        } else if (value !== null && value !== undefined) {
+          return (
+            <span className="text-emerald-600 font-medium">
+              {VND.format(value)}
             </span>
           );
         }

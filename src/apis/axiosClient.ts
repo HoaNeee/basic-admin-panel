@@ -5,7 +5,7 @@ import { appName } from "../constants/appName";
 export const DOMAIN =
   import.meta.env.VITE_ENV === "dev"
     ? "http://localhost:3001"
-    : "https://api.kakrist.site";
+    : "https://api2.kakrist.site";
 
 const BASE_URL = `${DOMAIN}/admin`;
 
