@@ -6,13 +6,12 @@ import { MdOutlineInventory2, MdOutlineRateReview } from "react-icons/md";
 import { MdOutlineInsertChart } from "react-icons/md";
 import { LuCircleUserRound } from "react-icons/lu";
 import { BsBoxSeam } from "react-icons/bs";
-import { LuClipboardList } from "react-icons/lu";
 import Logo from "../assets/logo.png";
 import { TiTags } from "react-icons/ti";
 import { appName } from "../constants/appName";
 import { RiDiscountPercentLine } from "react-icons/ri";
 import { PiUsersThree } from "react-icons/pi";
-import { IoSettingsOutline } from "react-icons/io5";
+import { IoSettingsOutline, IoTrashOutline } from "react-icons/io5";
 import React, { useEffect, useState } from "react";
 import { ImBlog } from "react-icons/im";
 
@@ -111,7 +110,7 @@ const items: MenuProps["items"] = [
         key: "/purchase-orders",
         label: (
           <Link to={"/purchase-orders"} className="font-medium">
-            All
+            All Purchase
           </Link>
         ),
       },
@@ -129,15 +128,6 @@ const items: MenuProps["items"] = [
     ],
   },
 
-  {
-    key: "/manage-store",
-    label: (
-      <Link to={"/manage-store"} className="font-medium">
-        Manage Store
-      </Link>
-    ),
-    icon: <LuClipboardList size={20} />,
-  },
   {
     key: "/promotions",
     label: (
@@ -173,6 +163,15 @@ const items: MenuProps["items"] = [
       </Link>
     ),
     icon: <ImBlog size={20} />,
+  },
+  {
+    key: "/trash",
+    label: (
+      <Link to={"/trash"} className="font-medium">
+        Trash
+      </Link>
+    ),
+    icon: <IoTrashOutline size={20} />,
   },
 ];
 

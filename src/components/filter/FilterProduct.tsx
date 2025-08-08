@@ -121,6 +121,10 @@ const FilterProduct = (props: Props) => {
             min={valueSelect?.price?.min}
             max={valueSelect?.price?.max}
             range
+            defaultValue={[
+              valueSelect?.price?.min || 0,
+              valueSelect?.price?.max || 1000000,
+            ]}
           />
         </Form.Item>
       </Form>

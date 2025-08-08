@@ -30,6 +30,7 @@ import {
   FiDollarSign,
   FiCheckCircle,
 } from "react-icons/fi";
+import type { FilterOrder } from "../models/puchaseOrder";
 
 const statusItems: MenuProps["items"] = [
   {
@@ -55,12 +56,6 @@ const statusItems: MenuProps["items"] = [
     label: "Delivered",
   },
 ];
-
-interface FilterOrder {
-  status: string;
-  fromDate: string;
-  toDate: string;
-}
 
 const initialFilter: FilterOrder = {
   status: "",
@@ -390,7 +385,6 @@ const SaleOrders = () => {
     <>
       {context}
       <div className="min-h-screen bg-gray-50">
-        {/* Page Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -425,7 +419,6 @@ const SaleOrders = () => {
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="px-6">
           {" "}
           <TableFilter

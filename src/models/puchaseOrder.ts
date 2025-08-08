@@ -3,6 +3,7 @@ export interface PurchaseOrderModel {
   products: POProduct[];
   status: string;
   supplier_id: string;
+  supplierName?: string;
   typePurchase: string;
   templateProduct?: POProduct;
   totalCost: number;
@@ -20,4 +21,10 @@ export interface POProduct {
   title: string;
   price: number;
   _id: string;
+}
+
+export interface FilterOrder {
+  status: string;
+  fromDate: string;
+  toDate: string;
 }

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Button, message, Popconfirm, Table, Rate } from "antd";
+import { Button, message, Popconfirm, Table, Rate, Select } from "antd";
 import TableFilter from "../components/TableFilter";
 import { handleAPI } from "../apis/request";
 import { useEffect, useState, useCallback } from "react";
@@ -29,13 +29,25 @@ const Reviews = () => {
   const [openModalComment, setOpenModalComment] = useState(false);
   const [openModalFile, setOpenModalFile] = useState(false);
   const [reviewSelected, setReviewSelected] = useState<ReviewModel>();
+  const [valuesFilter, setValuesFilter] = useState<any>();
+  const [filter, setFilter] = useState<any>();
+  const [statistics, setStatistics] = useState<{
+    totalReviews: number;
+    averageRating: number;
+  }>();
 
   const [messApi, context] = message.useMessage();
+
+  useEffect(() => {
+    getStatstics();
+  }, []);
 
   const getReviewsAndComments = useCallback(async () => {
     try {
       setIsLoading(true);
-      const api = `/reviews?page=${page}&limit=${limit}&keyword=${keyword}`;
+      const api = `/reviews?page=${page}&limit=${limit}&keyword=${keyword}&star=${
+        filter?.star || ""
+      }`;
       const response = await handleAPI(api);
       setReviews(response.data.reviews);
       setTotalRecord(response.data.totalRecord);
@@ -44,11 +56,23 @@ const Reviews = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, keyword]);
+  }, [page, limit, keyword, filter]);
 
   useEffect(() => {
     getReviewsAndComments();
   }, [getReviewsAndComments]);
+
+  const getStatstics = async () => {
+    try {
+      const response: any = await handleAPI("/reviews/statistics");
+      setStatistics({
+        totalReviews: response.data.totalReviews,
+        averageRating: response.data.averageRating,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const columns: ColumnType<ReviewModel>[] = [
     {
@@ -278,7 +302,6 @@ const Reviews = () => {
     <>
       {context}
       <div className="min-h-screen bg-gray-50">
-        {/* Page Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -298,7 +321,7 @@ const Reviews = () => {
               <div className="text-right">
                 <div className="text-sm text-gray-500">Total Reviews</div>
                 <div className="text-lg font-semibold text-gray-900">
-                  {totalRecord || 0}
+                  {statistics?.totalReviews || 0}
                 </div>
               </div>
               <div className="text-right">
@@ -306,14 +329,7 @@ const Reviews = () => {
                 <div className="flex items-center gap-1">
                   <FiStar className="w-4 h-4 text-yellow-500 fill-current" />
                   <span className="text-lg font-semibold text-gray-900">
-                    {reviews.length > 0
-                      ? (
-                          reviews.reduce(
-                            (acc, review) => acc + review.star,
-                            0
-                          ) / reviews.length
-                        ).toFixed(1)
-                      : "0.0"}
+                    {statistics?.averageRating || "0.0"}
                   </span>
                 </div>
               </div>
@@ -321,7 +337,6 @@ const Reviews = () => {
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="px-6">
           {" "}
           <TableFilter
@@ -331,6 +346,54 @@ const Reviews = () => {
                 setPage(1);
               }
               setKeyword(key);
+            }}
+            filter={
+              <div className="flex flex-col gap-4">
+                <div>
+                  <Select
+                    className="w-full"
+                    placeholder="Filter by Rating"
+                    onChange={(value) => {
+                      setValuesFilter({
+                        ...valuesFilter,
+                        star: value,
+                      });
+                    }}
+                    value={valuesFilter?.star || undefined}
+                    allowClear
+                    options={[
+                      {
+                        label: "5 Stars",
+                        value: "5",
+                      },
+                      {
+                        label: "4 Stars",
+                        value: "4",
+                      },
+                      {
+                        label: "3 Stars",
+                        value: "3",
+                      },
+                      {
+                        label: "2 Stars",
+                        value: "2",
+                      },
+                      {
+                        label: "1 Star",
+                        value: "1",
+                      },
+                    ]}
+                  />
+                </div>
+              </div>
+            }
+            onClearFilter={() => {
+              setValuesFilter(undefined);
+              setFilter(undefined);
+            }}
+            onFilter={() => {
+              setPage(1);
+              setFilter(valuesFilter);
             }}
           >
             <Table

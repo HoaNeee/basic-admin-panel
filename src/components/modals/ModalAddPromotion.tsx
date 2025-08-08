@@ -134,7 +134,7 @@ const ModalAddPromotion = (props: Props) => {
         form={form}
         onFinish={handleFinish}
         layout="vertical"
-        size="large"
+        size="middle"
       >
         <Form.Item label="Title" name={"title"} rules={rules}>
           <Input placeholder="Enter title" />

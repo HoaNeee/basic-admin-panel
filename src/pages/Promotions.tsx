@@ -1,16 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  Button,
-  Divider,
-  Dropdown,
-  Flex,
-  Input,
-  message,
-  Popconfirm,
-  Space,
-  Table,
-  Tag,
-} from "antd";
+import { Button, message, Popconfirm, Select, Space, Table, Tag } from "antd";
 import { useEffect, useState } from "react";
 import ModalAddPromotion from "../components/modals/ModalAddPromotion";
 import { handleAPI } from "../apis/request";
@@ -18,26 +7,35 @@ import type { ColumnProps } from "antd/es/table";
 import type { PromotionModel } from "../models/promotionModel";
 import { FiEdit3 } from "react-icons/fi";
 import { CiTrash } from "react-icons/ci";
-import { IoFilterOutline } from "react-icons/io5";
+import TableFilter from "../components/TableFilter";
 
 const Promotions = () => {
   const [openModalAddPromotion, setOpenModalAddPromotion] = useState(false);
   const [promotions, setPromotions] = useState<PromotionModel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [promotion, setPromotion] = useState<PromotionModel>();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [valuesFilter, setValuesFilter] = useState<any>();
+  const [filter, setFilter] = useState<any>();
+  const [keyword, setKeyword] = useState("");
+  const [totalRecord, setTotalRecord] = useState(10);
 
   const [mesApi, contextHolderMes] = message.useMessage();
 
   useEffect(() => {
     getPromotions();
-  }, []);
+  }, [page, limit, keyword, filter]);
 
   const getPromotions = async () => {
-    const api = `/promotions`;
+    const api = `/promotions?page=${page}&limit=${limit}&keyword=${keyword}&status=${
+      filter?.status || ""
+    }&promotionType=${filter?.promotionType || ""}`;
     try {
       setIsLoading(true);
       const response = await handleAPI(api);
-      setPromotions(response.data);
+      setPromotions(response.data.promotions);
+      setTotalRecord(response.data.totalRecord);
     } catch (error: any) {
       mesApi.error(error.message);
     } finally {
@@ -143,6 +141,9 @@ const Promotions = () => {
         const start = new Date(record.startAt || "").getTime();
         const end = new Date(record.endAt).getTime();
         const now = new Date().getTime();
+        if (start > now) {
+          return <Tag color="blue">Upcoming</Tag>;
+        }
         if (end < now || start > end) {
           return <Tag color="red">Expired</Tag>;
         }
@@ -178,56 +179,47 @@ const Promotions = () => {
     },
   ];
 
+  const renderFilterContent = () => {
+    return (
+      <div className="flex gap-2 flex-col">
+        <Select
+          placeholder="Promotion Type"
+          className="w-full"
+          value={valuesFilter?.promotionType || undefined}
+          onChange={(val) => {
+            setValuesFilter({ ...valuesFilter, promotionType: val });
+          }}
+        >
+          <Select.Option value="percent">Percent</Select.Option>
+          <Select.Option value="discount">Amount</Select.Option>
+        </Select>
+        <Select
+          placeholder="Status"
+          className="w-full"
+          value={valuesFilter?.status || undefined}
+          onChange={(val) => {
+            setValuesFilter({ ...valuesFilter, status: val });
+          }}
+        >
+          <Select.Option value="intime">In Time</Select.Option>
+          <Select.Option value="upcoming">Upcoming</Select.Option>
+          <Select.Option value="expired">Expired</Select.Option>
+        </Select>
+      </div>
+    );
+  };
+
   return (
     <>
       {contextHolderMes}
       <div className="bg-white w-full h-full px-3 py-2 rounded-sm">
-        <Flex justify="space-between" align="center">
-          <div className="flex gap-4 items-center">
-            <p className="text-xl font-medium">Promotions</p>
-            {/* {selectedRowKeys.length > 0 && (
-              <>
-                <p>{selectedRowKeys.length} selected</p>
-                <Dropdown
-                  placement="bottom"
-                  arrow
-                  trigger={["click"]}
-                  popupRender={() => {
-                    return (
-                      <div className="dropdown-filter w-60 bg-white p-5 flex flex-col gap-2">
-                        <Button block onClick={confirm}>
-                          Delete All
-                        </Button>
-                        <Button block>---------</Button>
-                      </div>
-                    );
-                  }}
-                >
-                  <Button>Option</Button>
-                </Dropdown>
-              </>
-            )} */}
-          </div>
-          <Space size={5}>
-            <Input.Search
-              placeholder="Enter keyword..."
-              onSearch={async (key) => {
-                console.log(key);
-              }}
-              allowClear
-            />
-            <Dropdown
-              trigger={["click"]}
-              arrow
-              placement="bottom"
-              popupRender={() => {
-                return <div>Content</div>;
-              }}
-            >
-              <Button icon={<IoFilterOutline size={16} />}>Filters</Button>
-            </Dropdown>
-            <Divider type="vertical" />
-
+        <TableFilter
+          title="Promotions"
+          onSearch={(val) => {
+            setKeyword(val);
+            setPage(1);
+          }}
+          extra={
             <Button
               type="primary"
               onClick={() => {
@@ -236,9 +228,18 @@ const Promotions = () => {
             >
               Add Promotion
             </Button>
-          </Space>
-        </Flex>
-        <div className="mt-4">
+          }
+          filter={renderFilterContent()}
+          onFilter={() => {
+            setFilter(valuesFilter);
+            setPage(1);
+          }}
+          onClearFilter={() => {
+            setValuesFilter(undefined);
+            setFilter(undefined);
+            setPage(1);
+          }}
+        >
           <Table
             columns={columns}
             dataSource={promotions}
@@ -248,8 +249,18 @@ const Promotions = () => {
               x: "800px",
               y: "calc(100vh - 200px)",
             }}
+            pagination={{
+              current: page,
+              total: totalRecord,
+              pageSize: limit,
+              onChange: (page, pageSize) => {
+                setPage(page);
+                setLimit(pageSize);
+              },
+              hideOnSinglePage: true,
+            }}
           />
-        </div>
+        </TableFilter>
       </div>
       <ModalAddPromotion
         isOpen={openModalAddPromotion}

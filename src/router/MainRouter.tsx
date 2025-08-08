@@ -5,7 +5,7 @@ import Inventory from "../pages/Inventory";
 import Reports from "../pages/Reports";
 import Suppliers from "../pages/Suppliers";
 import Orders from "../pages/PurchaseOrders";
-import ManageStore from "../pages/ManageStore";
+import Trash from "../pages/Trash";
 import AddProduct from "../pages/product/AddProduct";
 import Category from "../pages/Category";
 import Variations from "../pages/Variations";
@@ -48,7 +48,7 @@ const MainRouter = () => {
             <Route index element={<Orders />} />
             <Route path="add-purchase-order" element={<AddPurchaseOrder />} />
           </Route>
-          <Route element={<ManageStore />} path="manage-store" />
+          <Route element={<Trash />} path="trash" />
           <Route element={<Promotions />} path="promotions" />
           <Route element={<Customers />} path="customers" />
           <Route element={<Reviews />} path="reviews" />

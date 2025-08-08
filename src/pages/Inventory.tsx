@@ -86,7 +86,7 @@ const Inventory = () => {
     if (isFilter) {
       handleFilter(valueFilter, keyword);
     }
-  }, [valueFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [valueFilter]);
 
   const getProducts = useCallback(
     async (keyword: string = "") => {
@@ -601,7 +601,7 @@ const Inventory = () => {
                 onSearch={async (key) => {
                   if (!key && keyword) {
                     if (isFilter) {
-                      await handleFilter(valueFilter);
+                      await handleFilter(valueFilter, keyword);
                     } else {
                       await getProducts();
                     }
@@ -621,12 +621,15 @@ const Inventory = () => {
                         categories: categories,
                       }}
                       onFilter={async (values: any) => {
+                        setPage(1);
                         setIsFilter(true);
                         setValueFilter(values);
                       }}
                       onClear={async () => {
-                        setIsFilter(false);
-                        await getProducts(keyword);
+                        if (isFilter) {
+                          setIsFilter(false);
+                          await getProducts(keyword);
+                        }
                       }}
                     />
                   );

@@ -40,9 +40,10 @@ import { genCombinations } from "../../helpers/genCombinations";
 import ModalVariationOption from "../../components/modals/ModalVariationOption";
 import UploadImagePreview from "../../components/UploadImagePreview";
 import UploadImage from "../../components/UploadImage";
-import { EyeOutlined } from "@ant-design/icons";
+import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../redux/store";
+import ModalPuchaseOrder from "../../components/modals/ModalPuchaseOrder";
 
 interface SelectEdit extends SelectModel {
   sub_product_id?: string;
@@ -78,6 +79,7 @@ const UpdateProduct = () => {
   const [openModalAddVariationOption, setOpenModalAddVariationOption] =
     useState(false);
   const [variationSelected, setVariationSelected] = useState<VariationModel>();
+  const [showModalPuchaseOrder, setShowModalPuchaseOrder] = useState(false);
 
   const [mesApi, contextHolderMes] = message.useMessage();
   const [form] = Form.useForm();
@@ -242,10 +244,6 @@ const UpdateProduct = () => {
   const findItem = (data: any[] = [], key: string) => {
     const item = data.find((it) => it._id === key);
     return item;
-  };
-
-  const hideModalCategory = () => {
-    setOpenModalAddCategory(false);
   };
 
   const getProductDetail = async (product_id: string) => {
@@ -438,6 +436,13 @@ const UpdateProduct = () => {
       />
     );
   };
+  const hideModalCategory = () => {
+    setOpenModalAddCategory(false);
+  };
+
+  const hideModalPurchaseOrder = () => {
+    setShowModalPuchaseOrder(false);
+  };
 
   return (
     <>
@@ -449,6 +454,12 @@ const UpdateProduct = () => {
         <div className="flex items-center justify-between mb-5 rounded-md shadow-sm py-4 px-6 bg-white">
           <h3 className="text-2xl font-semibold">Edit Product</h3>
           <Space wrap={true}>
+            <Button
+              icon={<ShoppingCartOutlined />}
+              onClick={() => setShowModalPuchaseOrder(true)}
+            >
+              Order quantity
+            </Button>
             <a
               target="_blank"
               href={`https://${
@@ -1064,7 +1075,14 @@ const UpdateProduct = () => {
           )}
         </Form>
       </div>
-
+      <ModalPuchaseOrder
+        open={showModalPuchaseOrder}
+        onClose={hideModalPurchaseOrder}
+        product={productDetail}
+        subProducts={subProducts}
+        sampleSubProductVariation={sampleSubProductVariation}
+        messApi={mesApi}
+      />
       <ModalCategory
         isOpen={openModalAddCategory}
         onClose={hideModalCategory}

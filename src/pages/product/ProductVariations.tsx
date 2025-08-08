@@ -2,6 +2,7 @@
 import {
   Button,
   Card,
+  Checkbox,
   Collapse,
   Form,
   Input,
@@ -199,8 +200,11 @@ const ProductVariations = (props: Props) => {
       const key = item.map((it: any) => it.value).join("-");
       items.push({
         key_combi: key,
+        createPurchaseOrder: false,
+        SKU: "",
         price: undefined,
         stock: undefined,
+        cost: undefined,
         thumbnail: "",
         discountedPrice: undefined,
       });
@@ -316,6 +320,7 @@ const ProductVariations = (props: Props) => {
     key_combi: string,
     key: string
   ) => {
+    console.log(subProducts);
     const items: any = [...subProducts];
     const idx = items.findIndex((el: any) => el.key_combi === key_combi);
     if (idx !== -1) {
@@ -594,6 +599,24 @@ const ProductVariations = (props: Props) => {
                                   }
                                 />
                               </div>
+                            </div>
+                            <div className="w-full mt-4 flex items-center gap-2">
+                              <Checkbox
+                                id={`create-purchase-order-${key_combi}`}
+                                checked={it?.createPurchaseOrder}
+                                onChange={(e) =>
+                                  handleChangeValueVariationOption(
+                                    e.target.checked,
+                                    key_combi,
+                                    "createPurchaseOrder"
+                                  )
+                                }
+                              />
+                              <label
+                                htmlFor={`create-purchase-order-${key_combi}`}
+                              >
+                                Create purchase order for this sub product
+                              </label>
                             </div>
                           </Card>
                         </div>

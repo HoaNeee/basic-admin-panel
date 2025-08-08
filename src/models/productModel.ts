@@ -28,12 +28,14 @@ export interface ProductModel {
 }
 
 export interface SubProductModel {
+  _id?: string;
   product_id?: string;
   price?: number | undefined;
   thumbnail?: string | RcFile | File;
   stock?: number | undefined;
   SKU?: string;
   key_combi?: string;
+  createPurchaseOrder?: boolean;
   sub_product_id?: string;
   discountedPrice?: number | undefined;
   cost?: number | string;

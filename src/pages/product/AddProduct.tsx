@@ -104,6 +104,7 @@ const AddProduct = () => {
           discountedPrice: item?.discountedPrice,
           SKU: item?.SKU,
           cost: item?.cost,
+          createPurchaseOrder: item?.createPurchaseOrder || false,
         });
       }
 
@@ -519,16 +520,18 @@ const AddProduct = () => {
                 />
               </Card>
 
-              <Card style={{ padding: 0 }} size="small">
-                <Form.Item name={"createPurchaseOrder"} style={{ margin: 0 }}>
-                  <div className="flex items-center gap-2">
-                    <Checkbox id="createPurchaseOrder" />
-                    <label htmlFor="createPurchaseOrder">
-                      Create Purchase Order for this product
-                    </label>
-                  </div>
-                </Form.Item>
-              </Card>
+              {productType === "simple" && (
+                <Card style={{ padding: 0 }} size="small">
+                  <Form.Item name={"createPurchaseOrder"} style={{ margin: 0 }}>
+                    <div className="flex items-center gap-2">
+                      <Checkbox id="createPurchaseOrder" />
+                      <label htmlFor="createPurchaseOrder">
+                        Create Purchase Order for this product
+                      </label>
+                    </div>
+                  </Form.Item>
+                </Card>
+              )}
             </div>
           </div>
           {productType === "variations" && (
