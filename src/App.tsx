@@ -38,6 +38,17 @@ function App() {
             Table: {
               headerBg: "#fff",
             },
+            Tabs: {
+              inkBarColor: appColor.primary500,
+              itemActiveColor: appColor.primary500,
+              itemSelectedColor: appColor.primary500,
+              itemHoverColor: appColor.primary500,
+            },
+            Checkbox: {
+              colorPrimary: appColor.primary500,
+              colorPrimaryHover: appColor.primary400,
+              colorPrimaryActive: appColor.primary400,
+            },
           },
         }}
       >

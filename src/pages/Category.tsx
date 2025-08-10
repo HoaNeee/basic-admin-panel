@@ -115,9 +115,9 @@ const Category = () => {
   return (
     <>
       {contextHolderMes}
-      <div className="flex w-full h-full gap-6 relative">
+      <div className="flex w-full h-full gap-6 relative md:flex-row flex-col">
         {(isLoading || isDeleting) && <Loading type="screen" />}
-        <div className="w-2/5">
+        <div className="md:w-2/5 w-full">
           <Card title="Add New Category">
             <AddCategory
               categories={dataSelectTree}
@@ -143,7 +143,7 @@ const Category = () => {
             />
           </Card>
         </div>
-        <div className="w-3/5">
+        <div className="md:w-3/5">
           <Card size="small">
             <Table
               size="small"

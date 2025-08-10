@@ -38,11 +38,11 @@ const TableFilter = (props: Props) => {
   return (
     <>
       <div className="bg-white w-full h-full p-5 rounded-sm">
-        <Flex justify="space-between" align="center">
+        <Flex justify="space-between" align="center" wrap>
           <div className="flex gap-4 items-center">
             <p className="text-lg font-medium">{title}</p>
           </div>
-          <Space size={5}>
+          <Space size={5} wrap>
             <Input.Search
               placeholder={placeholderInputSearch || "Enter keyword..."}
               onSearch={onSearch}

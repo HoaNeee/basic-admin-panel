@@ -67,13 +67,13 @@ const Reports = () => {
 
   return (
     <div className="w-full h-full">
-      <div className="grid grid-cols-2 gap-4 max-h-fit">
+      <div className="grid md:grid-cols-2 gap-4 max-h-fit">
         <MyCard
           title={<h3 className="font-medium text-base text-lg">Overview</h3>}
           className="relative"
         >
           {isLoading && <Loading type="screen" />}
-          <div className="pb-5 border-b-2 border-gray-100 grid grid-cols-3">
+          <div className="pb-5 border-b-2 border-gray-100 grid md:grid-cols-3 md:grid-cols-2">
             <StatisticComponent
               label="Total profit"
               type="vertical"
@@ -93,7 +93,7 @@ const Reports = () => {
               value={dataReport?.sales?.toString()}
             />
           </div>
-          <div className="mt-5 grid grid-cols-3">
+          <div className="mt-5 grid md:grid-cols-3 md:grid-cols-2">
             <StatisticComponent
               label="Net Purchase value"
               type="vertical"
@@ -159,6 +159,10 @@ const Reports = () => {
             }}
             size="small"
             rowKey={"title"}
+            className="max-w-full"
+            scroll={{
+              x: 400,
+            }}
           />
         </MyCard>
       </div>
@@ -267,6 +271,9 @@ const Reports = () => {
             }}
             size="small"
             rowKey={"SKU"}
+            scroll={{
+              x: 600,
+            }}
           />
         </MyCard>
       </div>
@@ -279,22 +286,27 @@ export const MyCard = ({
   children,
   extra,
   className,
+  styles,
 }: {
   title?: string | ReactNode;
   children: ReactNode;
   extra?: ReactNode;
   className?: string;
+  styles?: React.CSSProperties;
 }) => {
   return (
     <Card
       styles={{
         body: {
           paddingTop: 10,
+          maxWidth: "calc(100vw - 32px)",
+          overflow: "hidden",
         },
         header: {
           border: 0,
         },
       }}
+      style={styles}
       className={className}
       extra={extra}
       title={title}

@@ -176,7 +176,7 @@ const WriteBlog: React.FC = () => {
 
       let response: any;
       if (blogId) {
-        response = await handleAPI(`/blogs/${blogId}`, blogData, "patch");
+        response = await handleAPI(`/blogs/edit/${blogId}`, blogData, "patch");
       } else {
         response = await handleAPI("/blogs", blogData, "post");
       }

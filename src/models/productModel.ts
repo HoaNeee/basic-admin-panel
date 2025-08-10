@@ -1,5 +1,6 @@
 import type { RcFile } from "antd/es/upload";
 import type { CategoryModel } from "./categoryModel";
+import type { VariationOptionModel } from "./variationModel";
 
 export interface ProductModel {
   _id: string;
@@ -25,6 +26,11 @@ export interface ProductModel {
     min: number;
     max: number;
   };
+  status?: string;
+  count_sub_product?: number;
+  categories_info?: CategoryModel[];
+  deletedAt?: string;
+  supplierName?: string;
 }
 
 export interface SubProductModel {
@@ -39,6 +45,9 @@ export interface SubProductModel {
   sub_product_id?: string;
   discountedPrice?: number | undefined;
   cost?: number | string;
+  options?: VariationOptionModel[];
+  thumbnail_product?: string;
+  title?: string;
 }
 
 export interface SubProductOptionModel {

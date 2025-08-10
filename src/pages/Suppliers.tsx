@@ -76,9 +76,9 @@ const Suppliers = () => {
     <>
       {contextHolderMess}
       <div className="w-full bg-white px-2 py-3 rounded-md">
-        <Flex justify="space-between" align="center">
+        <Flex justify="space-between" align="center" wrap>
           <p className="text-lg font-medium">Suppliers</p>
-          <Space size={5}>
+          <Space size={5} wrap>
             <Button type="primary" onClick={() => setOpenModal(true)}>
               Add Supplier
             </Button>
@@ -102,6 +102,10 @@ const Suppliers = () => {
             rowKey="_id"
             loading={isLoading}
             total={totalRecord}
+            scroll={{
+              x: 800,
+              y: 470,
+            }}
           />
         </div>
       </div>

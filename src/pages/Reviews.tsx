@@ -416,7 +416,7 @@ const Reviews = () => {
               }}
               className="border-none"
               scroll={{
-                x: "100%",
+                x: 800,
               }}
               locale={{
                 emptyText: (

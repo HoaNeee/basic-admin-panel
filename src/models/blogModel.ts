@@ -13,4 +13,8 @@ export interface BlogModel {
   deletedAt?: string;
   createdAt?: string;
   updatedAt?: string;
+  author?: {
+    fullName: string;
+    email: string;
+  };
 }

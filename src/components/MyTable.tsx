@@ -23,6 +23,10 @@ interface Props {
   pagination?: false | TablePaginationConfig | undefined;
   style?: React.CSSProperties;
   className?: string;
+  scroll?: {
+    x?: number;
+    y?: number;
+  };
 }
 
 const MyTable = (props: Props) => {
@@ -42,6 +46,7 @@ const MyTable = (props: Props) => {
     pagination,
     style,
     className,
+    scroll,
   } = props;
 
   const [totalRecord, setTotalRecord] = useState(0);
@@ -88,10 +93,12 @@ const MyTable = (props: Props) => {
             }
       }
       rowSelection={isSelectionRow ? rowSelection : undefined}
-      scroll={{
-        y: 470,
-        x: "auto",
-      }}
+      scroll={
+        scroll || {
+          y: 470,
+          x: "auto",
+        }
+      }
       components={{
         header: {
           cell: renderHeader,
