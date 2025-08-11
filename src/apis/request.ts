@@ -19,12 +19,15 @@ export const uploadImage = async (
   options: any,
   resize = true
 ) => {
-  const data: any = {};
+  const formData = new FormData();
   const newFile = resize ? await resizeFile(options) : options;
-  data[`${keyName}`] = newFile;
-  return await axiosClient.post("/upload", data, {
+  if (newFile instanceof File) {
+    formData.append(`${keyName}`, newFile);
+  }
+  return await axiosClient.post("/upload", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
+      Accept: true,
     },
   });
 };

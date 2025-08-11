@@ -30,7 +30,7 @@ interface SettingData {
   siteName: string;
   logoLight: string;
   logoDark: string;
-  favicon: string;
+  siteFavicon: string;
 
   domain: string;
   description: string;
@@ -67,7 +67,7 @@ const initialValues: SettingData = {
   siteName: "My e-commerce Store",
   logoLight: "",
   logoDark: "",
-  favicon: "",
+  siteFavicon: "",
   domain: "https://yourdomain.com",
   description: "Your online store description",
   keywords: ["ecommerce", "online store", "shopping"],
@@ -143,10 +143,10 @@ const Setting: React.FC = () => {
       }
       if (faviconFileList) {
         if (typeof faviconFileList === "string") {
-          values.favicon = faviconFileList;
+          values.siteFavicon = faviconFileList;
         } else {
-          const res = await uploadImage("favicon", faviconFileList);
-          values.favicon = res.data;
+          const res = await uploadImage("thumbnail", faviconFileList);
+          values.siteFavicon = res.data;
         }
       }
 

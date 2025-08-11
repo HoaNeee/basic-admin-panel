@@ -14,8 +14,10 @@ const Routes = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    getSetting();
-  }, []);
+    if (auth.accessToken) {
+      getSetting();
+    }
+  }, [auth.accessToken]);
 
   const getSetting = async () => {
     try {
