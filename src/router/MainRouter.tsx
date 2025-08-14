@@ -21,6 +21,7 @@ import Profile from "../pages/Profile";
 import SaleOrderDetail from "../pages/SaleOrderDetail";
 import Blogs from "../pages/Blogs";
 import WriteBlog from "../pages/blog/WriteBlog";
+import ProductEmbeded from "../pages/product/ProductEmbeded";
 
 const MainRouter = () => {
   return (
@@ -32,6 +33,7 @@ const MainRouter = () => {
             <Route index element={<Inventory />} />
             <Route path="add-new-product" element={<AddProduct />} />
             <Route path="edit-product/:id" element={<UpdateProduct />} />
+            <Route path="embedding" element={<ProductEmbeded />} />
             <Route path="variations">
               <Route element={<Variations />} index />
               <Route element={<VariationOptions />} path="options" />

@@ -444,6 +444,19 @@ const UpdateProduct = () => {
     setShowModalPuchaseOrder(false);
   };
 
+  const handleEmbedProduct = async () => {
+    try {
+      setIsLoading(true);
+      const api = `/products/embed/${product_id}`;
+      const response: any = await handleAPI(api, undefined, "post");
+      mesApi.success(response.message);
+    } catch (error: any) {
+      mesApi.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <>
       {contextHolderMes}
@@ -610,12 +623,15 @@ const UpdateProduct = () => {
                   <Button size="middle" onClick={() => navigate(-1)}>
                     Cancel
                   </Button>
+                  <Button size="middle" onClick={handleEmbedProduct}>
+                    Embed
+                  </Button>
                   <Button
                     size="middle"
                     type="primary"
                     onClick={() => form.submit()}
                   >
-                    Save Product
+                    Save
                   </Button>
                 </Space>
               </Card>

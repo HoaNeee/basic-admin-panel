@@ -380,7 +380,11 @@ const ModalConfirm = ({
     try {
       setChanging(true);
       const api = `${api_all}?action=${action}`;
-      const response: any = await handleAPI(api, undefined, "patch");
+      const response: any = await handleAPI(
+        api,
+        { checkedBulkSubProduct },
+        "patch"
+      );
       onFetch();
       onClose();
       if (tabName === "product") {

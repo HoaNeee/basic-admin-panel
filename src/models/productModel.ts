@@ -45,7 +45,7 @@ export interface SubProductModel {
   sub_product_id?: string;
   discountedPrice?: number | undefined;
   cost?: number | string;
-  options?: VariationOptionModel[];
+  options?: VariationOptionModel[] | string;
   thumbnail_product?: string;
   title?: string;
 }

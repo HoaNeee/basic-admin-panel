@@ -153,7 +153,7 @@ const Inventory = () => {
             content: "Loading...",
           });
 
-          const response: any = await handleAPI(
+          await handleAPI(
             api,
             {
               action: "delete-all",
@@ -164,7 +164,7 @@ const Inventory = () => {
           mesApi.open({
             key,
             type: "success",
-            content: response.message,
+            content: "Deleted " + selectedRowKeys.length + " items",
           });
           if (selectedRowKeys.length === products.length) {
             setPage(page - 1);
@@ -174,6 +174,7 @@ const Inventory = () => {
           }
           setSelectedRowKeys([]);
         } catch (error: any) {
+          console.log(error);
           mesApi.error(error.message);
         } finally {
           setIsUpdating(false);

@@ -54,6 +54,15 @@ const items: MenuProps["items"] = [
         type: "item",
       },
       {
+        key: "/inventories/embedding",
+        label: (
+          <Link to={"inventories/embedding"} className="font-medium">
+            Embedding
+          </Link>
+        ),
+        type: "item",
+      },
+      {
         key: "/inventories/variations",
         label: (
           <Link to={"inventories/variations"} className="font-medium">

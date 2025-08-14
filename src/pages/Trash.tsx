@@ -30,11 +30,6 @@ const Trash = () => {
             label: "Blogs",
             children: <BlogTrash />,
           },
-          {
-            key: "categories",
-            label: "Categories",
-            children: <div>Categories</div>,
-          },
         ]}
       />
     </MyCard>

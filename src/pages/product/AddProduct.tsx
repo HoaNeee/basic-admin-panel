@@ -222,6 +222,7 @@ const AddProduct = () => {
       const api = `/ai-assistant/product`;
       const response = await handleAPI(api, { input: value }, "post");
       const data = response.data;
+      console.log(data);
       if (data.title) {
         form.setFieldsValue({
           title: data.title,
@@ -442,7 +443,6 @@ const AddProduct = () => {
                   </Button>
                 </Space>
               </Card>
-
               <Card title="Category" size="small">
                 <Form.Item
                   name={"categories"}
@@ -511,7 +511,6 @@ const AddProduct = () => {
                   }}
                 />
               </Card>
-
               <Card title="Album" size="small">
                 <UploadImagePreview
                   multiple
@@ -519,7 +518,6 @@ const AddProduct = () => {
                   onChange={handleChangeImage}
                 />
               </Card>
-
               {productType === "simple" && (
                 <Card style={{ padding: 0 }} size="small">
                   <Form.Item name={"createPurchaseOrder"} style={{ margin: 0 }}>
@@ -532,6 +530,17 @@ const AddProduct = () => {
                   </Form.Item>
                 </Card>
               )}
+              =
+              <Card style={{ padding: 0 }} size="small">
+                <Form.Item name={"isEmbedding"} style={{ margin: 0 }}>
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="embedding" />
+                    <label htmlFor="embedding">
+                      Embedding this product to VectorDB
+                    </label>
+                  </div>
+                </Form.Item>
+              </Card>
             </div>
           </div>
           {productType === "variations" && (
