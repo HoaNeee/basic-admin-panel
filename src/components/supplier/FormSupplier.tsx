@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Checkbox, Form, Input, Select, type FormInstance } from "antd";
-import type { FormItem, FormModel } from "../models/formModel";
+import type { FormItem, FormModel } from "../../models/formModel";
 
 interface Props {
   formData?: FormModel;
@@ -10,7 +10,7 @@ interface Props {
   setIsTaking?: any;
 }
 
-const MyForm = (props: Props) => {
+const FormSupplier = (props: Props) => {
   const { formData, form, onFinish, isTaking, setIsTaking } = props;
 
   const renderChildren = (item: FormItem) => {
@@ -31,8 +31,12 @@ const MyForm = (props: Props) => {
         return (
           <Select
             options={item.look_items}
-            placeholder={"Updating..."}
-            disabled={item.key === "product" || item.key === "category"}
+            placeholder={item.placeholder}
+            disabled={item.key === "product"}
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            mode="tags"
           />
         );
 
@@ -83,4 +87,4 @@ const MyForm = (props: Props) => {
   );
 };
 
-export default MyForm;
+export default FormSupplier;

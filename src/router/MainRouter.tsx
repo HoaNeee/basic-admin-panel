@@ -22,6 +22,8 @@ import SaleOrderDetail from "../pages/SaleOrderDetail";
 import Blogs from "../pages/Blogs";
 import WriteBlog from "../pages/blog/WriteBlog";
 import ProductEmbeded from "../pages/product/ProductEmbeded";
+import Subscribers from "../pages/Subscribers";
+import Contact from "../pages/Contact";
 
 const MainRouter = () => {
   return (
@@ -54,6 +56,8 @@ const MainRouter = () => {
           <Route element={<Promotions />} path="promotions" />
           <Route element={<Customers />} path="customers" />
           <Route element={<Reviews />} path="reviews" />
+          <Route element={<Subscribers />} path="subscribers" />
+          <Route element={<Contact />} path="contact" />
           <Route path="profile" element={<Profile />} />
           <Route path="blogs">
             <Route index element={<Blogs />} />

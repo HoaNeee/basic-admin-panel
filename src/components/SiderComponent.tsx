@@ -1,10 +1,10 @@
 import { Menu, type MenuProps } from "antd";
 import Sider from "antd/es/layout/Sider";
 import { Link, useLocation, useNavigate } from "react-router";
-import { RiBillLine, RiHome5Line } from "react-icons/ri";
-import { MdOutlineInventory2, MdOutlineRateReview } from "react-icons/md";
+import { RiBillLine, RiHome5Line, RiMailAiLine } from "react-icons/ri";
+import { MdOutlineRateReview } from "react-icons/md";
 import { MdOutlineInsertChart } from "react-icons/md";
-import { LuCircleUserRound } from "react-icons/lu";
+import { LuCircleUserRound, LuMessageCircleReply } from "react-icons/lu";
 import { BsBoxSeam } from "react-icons/bs";
 import Logo from "../assets/logo.png";
 import { TiTags } from "react-icons/ti";
@@ -14,6 +14,8 @@ import { PiUsersThree } from "react-icons/pi";
 import { IoSettingsOutline, IoTrashOutline } from "react-icons/io5";
 import React, { useEffect, useState } from "react";
 import { ImBlog } from "react-icons/im";
+import { FiShoppingBag } from "react-icons/fi";
+import styles from "../assets/css/SiderComponent.module.css";
 
 interface SiderComponentProps {
   collapsed: boolean;
@@ -32,15 +34,20 @@ const items: MenuProps["items"] = [
   },
 
   {
+    key: "products-group",
+    label: "Product Management",
+    type: "group",
+  },
+  {
     key: "inventories",
-    label: <p className="font-medium">Inventories</p>,
-    icon: <MdOutlineInventory2 size={20} />,
+    label: "Products",
+    icon: <FiShoppingBag size={20} />,
     children: [
       {
         key: "/inventories",
         label: (
           <Link to={"/inventories"} className={"font-medium"}>
-            Inventory
+            All Products
           </Link>
         ),
       },
@@ -48,32 +55,28 @@ const items: MenuProps["items"] = [
         key: "/inventories/add-new-product",
         label: (
           <Link to={"inventories/add-new-product"} className="font-medium">
-            Add product
+            Add New Product
           </Link>
         ),
-        type: "item",
-      },
-      {
-        key: "/inventories/embedding",
-        label: (
-          <Link to={"inventories/embedding"} className="font-medium">
-            Embedding
-          </Link>
-        ),
-        type: "item",
       },
       {
         key: "/inventories/variations",
         label: (
           <Link to={"inventories/variations"} className="font-medium">
-            Variations
+            Product Variations
           </Link>
         ),
-        type: "item",
+      },
+      {
+        key: "/inventories/embedding",
+        label: (
+          <Link to={"inventories/embedding"} className="font-medium">
+            AI Search Setup
+          </Link>
+        ),
       },
     ],
   },
-
   {
     key: "/categories",
     label: (
@@ -83,43 +86,31 @@ const items: MenuProps["items"] = [
     ),
     icon: <TiTags size={20} />,
   },
+
   {
-    key: "/reports",
-    label: (
-      <Link to={"/reports"} className="font-medium">
-        Reports
-      </Link>
-    ),
-    icon: <MdOutlineInsertChart size={20} />,
-  },
-  {
-    key: "/suppliers",
-    label: (
-      <Link to={"/suppliers"} className="font-medium">
-        Suppliers
-      </Link>
-    ),
-    icon: <LuCircleUserRound size={20} />,
+    key: "orders-group",
+    label: "Order Management",
+    type: "group",
   },
   {
     key: "/sale-orders",
     label: (
       <Link to={"/sale-orders"} className="font-medium">
-        Sale Orders
+        Customer Orders
       </Link>
     ),
     icon: <RiBillLine size={20} />,
   },
   {
     key: "purchase-orders",
-    label: <p className="font-medium">Purchase</p>,
+    label: "Purchase Orders",
     icon: <BsBoxSeam size={20} />,
     children: [
       {
         key: "/purchase-orders",
         label: (
           <Link to={"/purchase-orders"} className="font-medium">
-            All Purchase
+            All Purchase Orders
           </Link>
         ),
       },
@@ -130,21 +121,56 @@ const items: MenuProps["items"] = [
             to={"/purchase-orders/add-purchase-order"}
             className="font-medium"
           >
-            New Order
+            Create New Order
           </Link>
         ),
       },
     ],
   },
+  {
+    key: "/suppliers",
+    label: (
+      <Link to={"/suppliers"} className="font-medium">
+        Suppliers
+      </Link>
+    ),
+    icon: <LuCircleUserRound size={20} />,
+  },
 
+  {
+    key: "analytics-group",
+    label: "Analytics & Reports",
+    type: "group",
+  },
+  {
+    key: "/reports",
+    label: (
+      <Link to={"/reports"} className="font-medium">
+        Business Reports
+      </Link>
+    ),
+    icon: <MdOutlineInsertChart size={20} />,
+  },
+
+  {
+    key: "marketing-group",
+    label: "Marketing",
+    type: "group",
+  },
   {
     key: "/promotions",
     label: (
       <Link to={"/promotions"} className="font-medium">
-        Promotions
+        Promotions & Discounts
       </Link>
     ),
     icon: <RiDiscountPercentLine size={20} />,
+  },
+
+  {
+    key: "customer-group",
+    label: "Customer Relations",
+    type: "group",
   },
   {
     key: "/customers",
@@ -159,16 +185,40 @@ const items: MenuProps["items"] = [
     key: "/reviews",
     label: (
       <Link to={"/reviews"} className="font-medium">
-        Reviews
+        Customer Reviews
       </Link>
     ),
     icon: <MdOutlineRateReview size={20} />,
   },
   {
+    key: "/subscribers",
+    label: (
+      <Link to={"/subscribers"} className="font-medium">
+        Customer Subscribers
+      </Link>
+    ),
+    icon: <RiMailAiLine size={20} />,
+  },
+  {
+    key: "/contact",
+    label: (
+      <Link to={"/contact"} className="font-medium">
+        Customer Contact
+      </Link>
+    ),
+    icon: <LuMessageCircleReply size={20} />,
+  },
+
+  {
+    key: "content-group",
+    label: "Content & System",
+    type: "group",
+  },
+  {
     key: "/blogs",
     label: (
       <Link to={"/blogs"} className="font-medium">
-        Blogs
+        Blog Management
       </Link>
     ),
     icon: <ImBlog size={20} />,
@@ -177,7 +227,7 @@ const items: MenuProps["items"] = [
     key: "/trash",
     label: (
       <Link to={"/trash"} className="font-medium">
-        Trash
+        Deleted Items
       </Link>
     ),
     icon: <IoTrashOutline size={20} />,
@@ -221,7 +271,7 @@ const SiderComponent: React.FC<SiderComponentProps> = ({
     <>
       {isMobile && !collapsed && (
         <div
-          className="fixed inset-0 bg-black opacity-50 z-50 lg:hidden"
+          className="lg:hidden fixed inset-0 z-50 bg-black opacity-50"
           onClick={() => onCollapse(true)}
         />
       )}
@@ -266,21 +316,21 @@ const SiderComponent: React.FC<SiderComponentProps> = ({
           >
             <Link
               to={"/"}
-              className="flex items-center space-x-3 group transition-all duration-200"
+              className="group flex items-center space-x-3 transition-all duration-200"
             >
               <div className="w-12 h-12 rounded-xl overflow-hidden p-1.5 shadow-md group-hover:shadow-lg transition-shadow">
                 <img
                   src={Logo}
                   alt="Logo"
-                  className="w-full h-full object-contain rounded-lg bg-white"
+                  className="object-contain w-full h-full bg-white rounded-lg"
                 />
               </div>
               {!collapsed && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-gray-900 font-bold text-lg truncate group-hover:text-blue-600 transition-colors">
+                  <p className="group-hover:text-blue-600 text-lg font-bold text-gray-900 truncate transition-colors">
                     {appName.appConstantname}
                   </p>
-                  <p className="text-xs text-gray-500 truncate font-medium">
+                  <p className="text-xs font-medium text-gray-500 truncate">
                     Admin Panel
                   </p>
                 </div>
@@ -289,11 +339,11 @@ const SiderComponent: React.FC<SiderComponentProps> = ({
           </div>
 
           <div
-            className="flex-1 overflow-y-auto py-2"
+            className={`flex-1 overflow-y-auto py-2 ${styles.siderMenu}`}
             style={{
               WebkitScrollSnapType: "y mandatory",
               scrollSnapType: "y mandatory",
-              scrollbarWidth: "none",
+              scrollbarWidth: "thin",
               msOverflowStyle: "none",
               scrollbarColor: "#ddd #f0f0f0",
               overflowY: "auto",
@@ -312,6 +362,7 @@ const SiderComponent: React.FC<SiderComponentProps> = ({
               style={{
                 backgroundColor: "transparent",
               }}
+              theme="light"
             />
           </div>
 
@@ -342,9 +393,9 @@ const SiderComponent: React.FC<SiderComponentProps> = ({
               />
               {!collapsed && (
                 <>
-                  <span className="font-medium text-sm">Settings</span>
+                  <span className="text-sm font-medium">Settings</span>
                   {pathName === "/setting" && (
-                    <div className="absolute right-2 w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="right-2 absolute w-2 h-2 bg-blue-500 rounded-full"></div>
                   )}
                 </>
               )}

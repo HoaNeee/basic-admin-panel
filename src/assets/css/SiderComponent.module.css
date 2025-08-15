@@ -1,0 +1,93 @@
+.siderMenu :global(.ant-menu-item-group-title) {
+  color: #6b7280;
+  font-size: 10px !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 16px;
+  margin-bottom: 4px !important;
+  line-height: 1.2 !important;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.siderMenu :global(.ant-menu-item-group-list) {
+  margin-bottom: 16px !important;
+}
+
+.siderMenu :global(.ant-menu-item),
+.siderMenu :global(.ant-menu-submenu-title) {
+  border-radius: 8px !important;
+  margin: 0 8px 4px 8px !important;
+}
+
+.siderMenu :global(.ant-menu-item:hover),
+.siderMenu :global(.ant-menu-submenu-title:hover) {
+  background-color: var(--color-primary-100) !important;
+  color: var(--color-primary) !important;
+}
+
+.siderMenu :global(.ant-menu-item-selected) {
+  background-color: var(--color-primary-200) !important;
+  color: var(--color-primary-400) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.siderMenu :global(.ant-menu-submenu-selected > .ant-menu-submenu-title) {
+  background-color: var(--color-primary-100) !important;
+  color: var(--color-primary) !important;
+}
+
+/* Collapsed state */
+.siderMenu :global(.ant-menu-inline-collapsed .ant-menu-item-group-title) {
+  display: none !important;
+}
+
+.siderMenu :global(.ant-menu-inline-collapsed .ant-menu-item-group-list) {
+  margin-bottom: 8px !important;
+}
+
+/* Submenu styling */
+.siderMenu :global(.ant-menu-sub) {
+  background-color: #f9fafb !important;
+}
+
+.siderMenu :global(.ant-menu-sub .ant-menu-item) {
+  padding-left: 48px !important;
+}
+
+.siderMenu :global(.ant-menu-sub .ant-menu-item:hover) {
+  background-color: var(--color-primary-200) !important;
+  color: var(--color-primary) !important;
+}
+
+.siderMenu :global(.ant-menu-sub .ant-menu-item-selected) {
+  background-color: var(--color-primary-200) !important;
+  color: var(--color-primary-400) !important;
+}
+
+/* Custom scrollbar for the menu */
+.siderMenu {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.siderMenu::-webkit-scrollbar {
+  width: 4px;
+}
+
+.siderMenu::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 2px;
+}
+
+.siderMenu::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+.siderMenu::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}

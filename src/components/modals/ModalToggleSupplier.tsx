@@ -6,7 +6,7 @@ import { handleAPI, uploadImage } from "../../apis/request";
 import type { Supplier } from "../../models/supplier";
 import type { MessageInstance } from "antd/es/message/interface";
 import type { FormModel } from "../../models/formModel";
-import MyForm from "../MyForm";
+import FormSupplier from "../supplier/FormSupplier";
 
 interface Props {
   isOpen: boolean;
@@ -15,23 +15,25 @@ interface Props {
   onUpdate: (val: Supplier) => void;
   supplier?: Supplier;
   mesApi: MessageInstance;
+  formData?: FormModel;
 }
 
 const ModalToggleSupplier = (props: Props) => {
-  const { isOpen, closeModal, onAddNew, supplier, mesApi, onUpdate } = props;
+  const { isOpen, closeModal, onAddNew, supplier, mesApi, onUpdate, formData } =
+    props;
 
   const [file, setFile] = useState<any>();
   const [isTaking, setIsTaking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState<FormModel>();
+  const [formDataState, setFormDataState] = useState<FormModel | undefined>();
 
   const inpFileRef = useRef<any>();
 
   const [form] = Form.useForm();
 
   useEffect(() => {
-    getForm();
-  }, []);
+    setFormDataState(formData);
+  }, [formData]);
 
   useEffect(() => {
     if (supplier) {
@@ -39,19 +41,6 @@ const ModalToggleSupplier = (props: Props) => {
       setIsTaking(supplier.isTaking === 1);
     }
   }, [supplier]);
-
-  const getForm = async () => {
-    const api = `/suppliers/get-form`;
-    try {
-      setIsLoading(true);
-      const response = await handleAPI(api);
-      setFormData(response.data);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleFinish = async (values: any) => {
     const data: any = {};
@@ -112,7 +101,7 @@ const ModalToggleSupplier = (props: Props) => {
       <div className="text-center">
         <label
           htmlFor="image-picker"
-          className="inline-flex py-3 items-center justify-center gap-3 relative"
+          className="relative inline-flex items-center justify-center gap-3 py-3"
         >
           {file ? (
             <Avatar
@@ -145,7 +134,7 @@ const ModalToggleSupplier = (props: Props) => {
               }}
             />
           )}
-          <div className="text-gray-400 flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center text-gray-400">
             <span>Drag image here</span>
             <span>or</span>
             <span className="text-blue-400 cursor-pointer">Browse image</span>
@@ -153,7 +142,7 @@ const ModalToggleSupplier = (props: Props) => {
               ref={inpFileRef}
               type="file"
               accept="image/*"
-              className="h-full w-full absolute top-0 left-0 opacity-0 cursor-pointer"
+              className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
               id="image-picker"
               name="thumbnail"
               onChange={(e) => {
@@ -166,9 +155,9 @@ const ModalToggleSupplier = (props: Props) => {
         </label>
       </div>
       <div className="mt-4" />
-      <MyForm
+      <FormSupplier
         form={form}
-        formData={formData}
+        formData={formDataState}
         onFinish={handleFinish}
         isTaking={isTaking}
         setIsTaking={setIsTaking}

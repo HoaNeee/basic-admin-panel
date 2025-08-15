@@ -31,14 +31,6 @@ export const columns = (
       },
     },
     {
-      key: "product",
-      dataIndex: "product",
-      title: "Product",
-      render: (value) => {
-        return value ? value : "-";
-      },
-    },
-    {
       key: "contact",
       dataIndex: "contact",
       title: "Contact",
