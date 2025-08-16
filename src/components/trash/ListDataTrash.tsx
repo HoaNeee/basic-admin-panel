@@ -11,7 +11,11 @@ import {
   Popconfirm,
   Space,
 } from "antd";
-import { RedoOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  RedoOutlined,
+  DeleteOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
 import type { MessageInstance } from "antd/es/message/interface";
 import type { PaginationConfig } from "antd/es/pagination";
 
@@ -118,6 +122,11 @@ const ListDataTrash = (props: Props) => {
   }) => {
     return (
       <Popconfirm
+        onOpenChange={(open) => {
+          if (!open) {
+            setCheckedSubProduct("");
+          }
+        }}
         title={
           <div className="flex flex-col gap-2">
             <p>
@@ -159,9 +168,9 @@ const ListDataTrash = (props: Props) => {
   return (
     <>
       <div className="w-full h-full">
-        <div className="flex justify-between md:items-center my-3 md:flex-row flex-col">
+        <div className="md:items-center md:flex-row flex flex-col justify-between my-3">
           {dataSource && dataSource?.length > 0 ? (
-            <div className="flex items-center gap-2 md:text-base text-sm">
+            <div className="md:text-base flex items-center gap-2 text-sm">
               <Checkbox
                 id="check-all"
                 checked={
@@ -225,13 +234,21 @@ const ListDataTrash = (props: Props) => {
             <div />
           )}
 
-          <div className="flex items-center gap-4 md:flex-row flex-col md:mt-0 mt-3">
+          <div className="md:flex-row md:mt-0 flex flex-col items-center gap-4 mt-3">
             <Input.Search
               placeholder="Search..."
               onSearch={(value) => onSearch?.(value)}
               allowClear
             />
             <Space>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => {
+                  onFetch?.();
+                }}
+              >
+                Refresh
+              </Button>
               <Button
                 icon={<RedoOutlined />}
                 onClick={() => {
@@ -271,7 +288,11 @@ const ListDataTrash = (props: Props) => {
                   <Space>
                     {popConfirm({
                       children: (
-                        <Button icon={<RedoOutlined />} title="Restore" />
+                        <Button
+                          icon={<RedoOutlined />}
+                          title="Restore"
+                          onClick={() => setCheckedSubProduct(item._id)}
+                        />
                       ),
                       item,
                       type: "restore",
@@ -282,6 +303,7 @@ const ListDataTrash = (props: Props) => {
                           danger
                           icon={<DeleteOutlined />}
                           title="Delete"
+                          onClick={() => setCheckedSubProduct(item._id)}
                         />
                       ),
                       item,
@@ -349,7 +371,7 @@ const ModalConfirm = ({
   api_all: string;
 }) => {
   const [changing, setChanging] = useState(false);
-  const [checkedBulkSubProduct, setCheckedBulkSubProduct] = useState(false);
+  const [checkedBulkSubProduct, setCheckedBulkSubProduct] = useState(true);
 
   const handleBulkAction = async (action: string) => {
     try {
@@ -425,7 +447,7 @@ const ModalConfirm = ({
         </div>
 
         {tabName === "product" ? (
-          <div className="my-2 flex items-center gap-2">
+          <div className="flex items-center gap-2 my-2">
             <Checkbox
               checked={checkedBulkSubProduct}
               onChange={(e) => setCheckedBulkSubProduct?.(e.target.checked)}
