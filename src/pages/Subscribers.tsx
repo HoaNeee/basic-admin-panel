@@ -14,6 +14,10 @@ import {
   Empty,
   Badge,
   message,
+  Checkbox,
+  Divider,
+  Dropdown,
+  Button,
 } from "antd";
 import {
   MailOutlined,
@@ -35,7 +39,7 @@ const { Search } = Input;
 interface Subscriber {
   _id: string;
   email: string;
-  isSent: boolean;
+  status: "sent" | "not-sent" | "cancel";
   subscribedAt?: string;
 }
 
@@ -47,19 +51,40 @@ const Subscribers = () => {
   const [page, setPage] = useState(1);
   const [totalRecord, setTotalRecord] = useState(10);
   const [filter, setFilter] = useState<{
-    isSent?: string;
+    status?: string;
   }>();
-  const limit = 10;
+  const [sent, setSent] = useState("");
+  const [stats, setStats] = useState<{
+    totalSubscribers: number;
+    sentSubscribers: number;
+    notSentSubscribers: number;
+    cancelSubscribers: number;
+  }>({
+    totalSubscribers: 0,
+    sentSubscribers: 0,
+    notSentSubscribers: 0,
+    cancelSubscribers: 0,
+  });
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
 
   const [messageApi, contextHolder] = message.useMessage();
+  const limit = 10;
+
+  useEffect(() => {
+    getSubscribersStats();
+  }, []);
 
   useEffect(() => {
     getSubscribers();
   }, [page, keyword, filter]);
 
-  const totalSubscribers = subscribers.length;
-  const sentCount = subscribers.filter((s) => s.isSent).length;
-  const notSentCount = subscribers.filter((s) => !s.isSent).length;
+  useEffect(() => {
+    if (sent) {
+      setTimeout(() => {
+        setSent("");
+      }, 2000);
+    }
+  }, [sent]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
@@ -82,12 +107,26 @@ const Subscribers = () => {
   const getSubscribers = async () => {
     try {
       setLoading(true);
-      const api = `/subscribers?page=${page}&limit=${limit}&keyword=${keyword}&isSent=${
-        filter?.isSent ? filter.isSent : ""
+      const api = `/subscribers?page=${page}&limit=${limit}&keyword=${keyword}&status=${
+        filter?.status ? filter.status : ""
       }`;
       const response = await handleAPI(api);
       setSubscribers(response.data.subscribers);
       setTotalRecord(response.data.totalRecord);
+    } catch (error) {
+      console.log(error);
+      messageApi.error("Failed to load subscribers");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getSubscribersStats = async () => {
+    try {
+      setLoading(true);
+      const api = `/subscribers/stats`;
+      const response = await handleAPI(api);
+      setStats(response.data);
     } catch (error) {
       console.log(error);
       messageApi.error("Failed to load subscribers");
@@ -102,18 +141,53 @@ const Subscribers = () => {
       await handleAPI(
         `/subscribers/${subscriber._id}`,
         {
-          isSent: subscriber.isSent,
           email: subscriber.email,
         },
         "patch"
       );
       messageApi.success("Update subscriber status successfully!");
+      setSent(subscriber._id);
       await getSubscribers();
     } catch (error) {
       console.log(error);
       messageApi.error("Failed to update subscriber status");
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleBulk = async (action: string) => {
+    try {
+      setIsUpdating(true);
+      await handleAPI(
+        "/subscribers/bulk",
+        {
+          ids: selectedKeys,
+          status: action,
+        },
+        "patch"
+      );
+      await getSubscribers();
+      await getSubscribersStats();
+      setSelectedKeys([]);
+      messageApi.success(`${action} subscribers successfully!`);
+    } catch (error) {
+      console.log(error);
+      messageApi.error("Failed to update subscriber status");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleSentAll = async () => {
+    try {
+      await handleAPI("/subscribers/send-all", {}, "patch");
+      messageApi.success("Send all subscribers successfully!");
+      await getSubscribers();
+      setSelectedKeys([]);
+    } catch (error) {
+      console.log(error);
+      messageApi.error("Failed to send all emails");
     }
   };
 
@@ -136,7 +210,7 @@ const Subscribers = () => {
           <Card>
             <Statistic
               title="Total Subscribers"
-              value={totalSubscribers}
+              value={stats.totalSubscribers}
               prefix={<UserOutlined />}
               valueStyle={{ color: "#1890ff" }}
             />
@@ -146,7 +220,7 @@ const Subscribers = () => {
           <Card>
             <Statistic
               title="Emails Sent"
-              value={sentCount}
+              value={stats.sentSubscribers}
               prefix={<CheckCircleOutlined />}
               valueStyle={{ color: "#52c41a" }}
             />
@@ -156,7 +230,7 @@ const Subscribers = () => {
           <Card>
             <Statistic
               title="Pending"
-              value={notSentCount}
+              value={stats.notSentSubscribers}
               prefix={<CloseCircleOutlined />}
               valueStyle={{ color: "#fa8c16" }}
             />
@@ -181,25 +255,76 @@ const Subscribers = () => {
               size="large"
               suffixIcon={<FilterOutlined />}
               onChange={(e) => {
-                setFilter((prev) => ({ ...prev, isSent: e }));
+                setFilter((prev) => ({ ...prev, status: e }));
               }}
             >
               <Select.Option value="all">Tất cả</Select.Option>
               <Select.Option value="sent">Đã gửi</Select.Option>
               <Select.Option value="not-sent">Chưa gửi</Select.Option>
+              <Select.Option value="cancel">Đã hủy</Select.Option>
             </Select>
           </Col>
         </Row>
       </Card>
 
       <Card
+        extra={<Button onClick={handleSentAll}>Send all</Button>}
         title={
-          <Space>
+          <Space wrap>
             <MailOutlined />
             <Text strong>Danh sách Subscribers ({subscribers.length})</Text>
+            {selectedKeys.length > 0 ? (
+              <>
+                <Divider type="vertical" />
+                <div className="md:pb-0 flex flex-wrap items-center gap-4 pb-4 text-sm text-gray-500">
+                  <p>({selectedKeys.length}) items selected</p>
+                  <Dropdown
+                    trigger={["click"]}
+                    menu={{
+                      items: [
+                        {
+                          key: "sent",
+                          label: "Resend Email",
+                          onClick: () => handleBulk("sent"),
+                        },
+                        {
+                          key: "cancel",
+                          label: "Cancel Subscription",
+                          onClick: () => handleBulk("cancel"),
+                        },
+                      ],
+                    }}
+                  >
+                    <Button>Bulk action</Button>
+                  </Dropdown>
+                </div>
+              </>
+            ) : null}
           </Space>
         }
       >
+        {subscribers.length > 0 && (
+          <div className="flex items-center gap-2 mb-4">
+            <Checkbox
+              checked={
+                selectedKeys.length === subscribers.length &&
+                subscribers.length > 0
+              }
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedKeys(subscribers.map((sub) => sub._id));
+                } else setSelectedKeys([]);
+              }}
+              indeterminate={
+                selectedKeys.length > 0 &&
+                selectedKeys.length < subscribers.length
+              }
+              id="check-all-subscribers"
+            />
+
+            <label htmlFor="check-all-subscribers">Check All</label>
+          </div>
+        )}
         {subscribers.length === 0 ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -222,31 +347,65 @@ const Subscribers = () => {
               onChange: (page) => setPage(page),
               hideOnSinglePage: true,
             }}
+            className=""
             renderItem={(subscriber) => (
               <List.Item
                 actions={[
                   <Tag
                     onClick={() => handleSent(subscriber)}
                     key="status"
-                    color={subscriber.isSent ? "success" : "warning"}
+                    color={
+                      subscriber.status === "sent"
+                        ? "success"
+                        : subscriber.status === "not-sent"
+                        ? "warning"
+                        : "default"
+                    }
                     className={`cursor-pointer`}
                     icon={
-                      subscriber.isSent ? (
+                      subscriber.status === "sent" ? (
                         <CheckCircleOutlined />
+                      ) : subscriber.status === "not-sent" ? (
+                        <CloseCircleOutlined />
                       ) : (
                         <CloseCircleOutlined />
                       )
                     }
                   >
-                    {subscriber.isSent ? "Đã gửi" : "Chưa gửi"}
+                    {sent && sent === subscriber._id
+                      ? "Đã gửi"
+                      : subscriber.status === "sent"
+                      ? "Gửi lại"
+                      : subscriber.status === "cancel"
+                      ? "Đã hủy"
+                      : "Chưa gửi"}
                   </Tag>,
                 ]}
               >
+                <div
+                  style={{
+                    height: "-webkit-fill-available",
+                  }}
+                  className="mr-2"
+                >
+                  <Checkbox
+                    checked={selectedKeys.includes(subscriber._id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedKeys([...selectedKeys, subscriber._id]);
+                      } else {
+                        setSelectedKeys(
+                          selectedKeys.filter((key) => key !== subscriber._id)
+                        );
+                      }
+                    }}
+                  />
+                </div>
                 <List.Item.Meta
                   avatar={
                     <Badge
                       count={
-                        subscriber.isSent ? (
+                        subscriber.status === "sent" ? (
                           <div className="flex items-center justify-center w-4 h-4 bg-green-500 rounded-full">
                             <IoCheckmark color="white" />
                           </div>
@@ -271,7 +430,7 @@ const Subscribers = () => {
                   title={
                     <Space>
                       <Text strong>{subscriber.email}</Text>
-                      {subscriber.isSent && (
+                      {subscriber.status === "sent" && (
                         <SendOutlined
                           style={{ color: "#52c41a", fontSize: "12px" }}
                         />

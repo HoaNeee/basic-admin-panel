@@ -119,7 +119,7 @@ const Blogs: React.FC = () => {
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
-      await handleAPI(`/blogs/${id}`, { status: newStatus }, "patch");
+      await handleAPI(`/blogs/edit/${id}`, { status: newStatus }, "patch");
       messageApi.success(`Blog ${newStatus} successfully`);
       fetchBlogs();
     } catch (error: any) {
@@ -157,10 +157,10 @@ const Blogs: React.FC = () => {
       width: 300,
       render: (text: string, record: BlogData) => (
         <div>
-          <div className="font-medium line-clamp-2 text-ellipsis overflow-hidden">
+          <div className="line-clamp-2 text-ellipsis overflow-hidden font-medium">
             {text}
           </div>
-          <div className="text-sm text-gray-500 mt-1">
+          <div className="mt-1 text-sm text-gray-500">
             {record.excerpt.length > 80
               ? record.excerpt.substring(0, 80) + "..."
               : record.excerpt}
@@ -226,7 +226,6 @@ const Blogs: React.FC = () => {
                 label: "View",
                 icon: <EyeOutlined />,
                 onClick: () => {
-                  // Implement view functionality
                   messageApi.info("View functionality to be implemented");
                 },
               },
@@ -329,7 +328,7 @@ const Blogs: React.FC = () => {
     <>
       {contextHolder}
       <div className="p-6">
-        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="sm:grid-cols-2 lg:grid-cols-4 grid grid-cols-1 gap-4 mb-6">
           <Card>
             <Statistic
               title="Total Blogs"
