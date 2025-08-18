@@ -355,8 +355,10 @@ const SaleOrders = () => {
     try {
       setIsLoading(true);
       await handleChangeStatusCall(order_id, payload);
-    } catch (error) {
+      messApi.success("Order status changed successfully");
+    } catch (error: any) {
       console.log(error);
+      messApi.error("Failed to change order status: " + error.message);
     } finally {
       setIsLoading(false);
     }
